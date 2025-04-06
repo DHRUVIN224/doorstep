@@ -2,15 +2,15 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import Navigation from "../../components/Navigation";
+import { messageAPI } from "../../services/api"; // Import messageAPI
 
 export default function Messages() {
   const [data, setData] = useState([]);
   const token = localStorage.getItem("token");
 
   useEffect(() => {
-    messageAPI.viewBusinessMessage({
-        
-      })
+    messageAPI
+      .viewBusinessMessage() // Use messageAPI here
       .then((response) => {
         console.log(response);
         const data = response.data.data;
@@ -21,6 +21,7 @@ export default function Messages() {
         console.log(error);
       });
   }, []);
+
   return (
     <>
       <Navigation />

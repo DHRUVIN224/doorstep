@@ -774,4 +774,29 @@ buissnessRouter.get("/updatebooking/:id", async (req, res) => {
     });
   }
 });
+
+buissnessRouter.get("/rejectjobstatus/:id", async (req, res) => {
+  const jobId = req.params.id;
+  try {
+    const rejectJob = await jobModel.findOneAndUpdate(
+      { _id: jobId },
+      { $set: { status: "rejected" } }
+    );
+    if (rejectJob) {
+      return res.status(200).json({
+        message: "Job status rejected successfully",
+      });
+    } else {
+      return res.status(404).json({
+        message: "Job not found",
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Internal Server Error",
+    });
+  }
+});
+
 module.exports = buissnessRouter;

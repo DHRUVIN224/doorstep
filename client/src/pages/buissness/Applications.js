@@ -2,16 +2,16 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import Navigation from "../../components/Navigation";
-import './applications.css'
+import { businessAPI } from "../../services/api"; // Import businessAPI
+import './applications.css';
 
 export default function Applications() {
   const token = localStorage.getItem("token");
   const [data, setData] = useState([]);
 
   useEffect(() => {
-    businessAPI.viewJobApplications({
-        
-      })
+    businessAPI
+      .viewJobApplications() // Use businessAPI here
       .then((response) => {
         console.log("response", response);
         const data = response.data.data;
