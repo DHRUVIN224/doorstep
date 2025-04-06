@@ -4,6 +4,7 @@ import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 import Navigation from "../../components/Navigation";
 import "./viewjobonsearch.css";
+import { businessAPI } from "../../services/api"; // Import businessAPI
 
 export default function Viewjobonsearch() {
   const [data, setData] = useState({});
@@ -11,11 +12,17 @@ export default function Viewjobonsearch() {
   const { id } = useParams();
 
   useEffect(() => {
-    businessAPI.viewJobOnSearch(`${id}`)
+    businessAPI
+      .viewJobOnSearch(`${id}`) // Use businessAPI here
       .then((response) => {
-        console.log(response);
+        console.log("API Response:", response);
         const data = response.data.data;
-        setData(data);
+        if (Array.isArray(data)) {
+          setData(data);
+        } else {
+          console.error("API returned non-array data:", data);
+          setData([]);
+        }
       })
       .catch((error) => {
         console.log(error);
@@ -26,7 +33,13 @@ export default function Viewjobonsearch() {
 
   const sendApplication = (jobid) => {
     try {
-      businessAPI.apply(jobid, data)
+      if (!data || typeof data !== "object") {
+        console.error("Invalid data format:", data);
+        return;
+      }
+
+      businessAPI
+        .apply(jobid, data) // Ensure `data` is in the correct format
         .then((response) => {
           console.log(response);
           const message = response.data.message;
@@ -37,6 +50,17 @@ export default function Viewjobonsearch() {
         });
     } catch (error) {
       console.log(error);
+    }
+  };
+
+  const sort = (jobdata) => {
+    if (Array.isArray(jobdata)) {
+      const sortedData = jobdata.sort((a, b) => a.budget - b.budget);
+      console.log("Sorted Data:", sortedData);
+      return sortedData;
+    } else {
+      console.error("jobdata is not an array:", jobdata);
+      return [];
     }
   };
 

@@ -3,6 +3,7 @@ import "./viewjoblisting.css";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import Navigation from "../../components/Navigation";
+import { businessAPI } from "../../services/api"; // Import businessAPI
 
 export default function Viewjoblisting() {
   const { id } = useParams();
@@ -10,7 +11,8 @@ export default function Viewjoblisting() {
   console.log("id:", id);
 
   useEffect(() => {
-    businessAPI.viewJobDetails(`${id}`)
+    businessAPI
+      .viewJobDetails(`${id}`) // Use businessAPI here
       .then((response) => {
         console.log("response logged", response);
         const jobdata = response.data.data;

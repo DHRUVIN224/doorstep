@@ -27,12 +27,28 @@ export default function Buissnessverification() {
   }, []);
 
   const approve = (loginId) => {
-    adminAPI.updateStatus(`${loginId}`)
+    adminAPI.updateStatus(`/admin/approvebusiness/${loginId}`) // Ensure this endpoint exists in your backend
       .then((response) => {
         console.log(response);
         const message = response.data.message;
         toast.success(message);
 
+        setTimeout(() => {
+          navigate("/verifications");
+        }, 2000);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+
+  const reject = (loginId) => {
+    adminAPI.rejectJobStatus(loginId) // Use the correct API method
+      .then((response) => {
+        console.log(response);
+        const message = response.data.message;
+        toast.error(message);
+  
         setTimeout(() => {
           navigate("/verifications");
         }, 2000);
@@ -93,7 +109,13 @@ export default function Buissnessverification() {
                 >
                   Approve
                 </button>
-                <button type="button" class="btn btn-outline-danger">
+                <button
+                  onClick={() => {
+                    reject(data.loginId);
+                  }}
+                  type="button"
+                  class="btn btn-outline-danger"
+                >
                   Reject
                 </button>
               </div>

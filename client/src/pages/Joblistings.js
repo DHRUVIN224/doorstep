@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import { businessAPI } from "../services/api";
 
 import {
   Button,
@@ -37,7 +38,7 @@ export default function Joblistings() {
     e.preventDefault();
     console.log("submit", data);
 
-    businessAPI.viewJobList( data)
+    businessAPI.viewJobList(data)
       .then((response) => {
         console.log(response);
         const jobdata = response.data.data;
@@ -50,7 +51,8 @@ export default function Joblistings() {
   };
 
   const sendApplication = (jobId) => {
-    businessAPI.jobId.then((response) => {
+    businessAPI.jobId(jobId)
+      .then((response) => {
         console.log(response);
       })
       .catch((error) => {

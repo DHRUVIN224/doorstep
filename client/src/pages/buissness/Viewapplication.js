@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import Navigation from "../../components/Navigation";
+import { businessAPI } from "../../services/api"; // Import businessAPI
 
 export default function Viewapplication() {
   const { id } = useParams();
@@ -9,7 +10,8 @@ export default function Viewapplication() {
   console.log(id);
 
   useEffect(() => {
-    businessAPI.viewApplication(`${id}`)
+    businessAPI
+      .viewApplication(`${id}`) // Use businessAPI here
       .then((response) => {
         console.log(response);
         const data = response.data.data;
@@ -19,6 +21,7 @@ export default function Viewapplication() {
         console.log(error);
       });
   }, []);
+
   return (
     <>
       <Navigation />
