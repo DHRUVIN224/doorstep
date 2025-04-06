@@ -43,3 +43,11 @@ Thumbs.db
 .env.development.local
 .env.test.local
 .env.production.local
+
+
+# Ignore node_modules inside server
+/server/node_modules/
+
+# Ignore .env at root and inside server
+.env
+/server/.env
