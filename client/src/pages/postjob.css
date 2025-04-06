@@ -1,0 +1,43 @@
+.main-div {
+  width: 50%;
+  height: fit-content;
+  margin-top: 50px;
+  margin-bottom: 50px;
+  padding: 5px;
+  background-color: white;
+}
+
+.heading-div {
+  padding: 15px;
+}
+.heading {
+  text-align: center;
+  font-family: serif;
+  color: #333;
+}
+
+.formlabel {
+  font-family: serif;
+  font-size: 14px;
+  color: #333;
+}
+.error-text {
+  color: red;
+  font-size: smaller;
+  margin-left: 5px;
+}
+.forminput {
+  height: 45px;
+}
+
+@media only screen and (max-width: 576px) {
+  .main-div {
+    width: 90%;
+  }
+}
+
+@media only screen and (min-width: 577px) and (max-width: 992px) {
+  .main-div {
+    width: 80%;
+  }
+}
