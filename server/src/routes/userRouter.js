@@ -621,31 +621,36 @@ userRouter.get("/viewapplicantprofile/:id", async (req, res) => {
 
 // update applicant status
 
-userRouter.get("/approvejobapplication/:id/:jobid", async (req, res) => {
-  const loginid = req.params.id;
-  const jobid = req.params.jobid;
-  console.log("loginid approvejob:", loginid);
-  console.log("jobid approvejob:", jobid);
+// Better implementation using PUT
+userRouter.put("/approvejobapplication/:applicantId/:jobId", async (req, res) => {
+  const { applicantId, jobId } = req.params;
+  console.log("Received:", applicantId, jobId); // Debug log
+  
   try {
-    const updateStatus = await applicationModel.updateOne(
-      { loginId: loginid },
+    // Update application status
+    const appUpdate = await applicationModel.updateOne(
+      { loginId: applicantId, jobId },
       { $set: { status: "1" } }
     );
-    console.log("updt sts", updateStatus);
-    if (updateStatus) {
-      try {
-        await jobModel.updateOne({ _id: jobid }, { $set: { status: "2" } }).then((response) => {
-          return res.status(200).json({
-            message: " status updated successfully",
-          });
-        });
-      } catch (error) {
-        console.log(error);
-      }
+
+    if (!appUpdate.modifiedCount) {
+      return res.status(404).json({ message: "Application not found" });
     }
+
+    // Update job status
+    const jobUpdate = await jobModel.updateOne(
+      { _id: jobId },
+      { $set: { status: "2" } }
+    );
+
+    return res.status(200).json({ 
+      message: "Application approved successfully",
+      data: { application: appUpdate, job: jobUpdate }
+    });
+
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Internal Server Error" });
+    console.error("Approval error:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
