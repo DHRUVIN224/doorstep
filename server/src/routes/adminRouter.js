@@ -244,4 +244,36 @@ adminRouter.get("/updatejobstatus/:id", checkAuthAdmin, async (req, res) => {
   }
 });
 
+// Reject job
+adminRouter.get("/rejectjobstatus/:id", checkAuthAdmin, async (req, res) => {
+  const jobId = req.params.id;
+  console.log("jobid for rejection:", jobId);
+
+  try {
+    const updateStatus = await jobModel.findOneAndUpdate(
+      { _id: jobId },
+      { $set: { status: "2" } },
+      { new: true }
+    );
+
+    if (updateStatus) {
+      return res.status(200).json({
+        message: "Job rejected successfully",
+        success: true
+      });
+    } else {
+      return res.status(400).json({
+        message: "Job rejection failed",
+        success: false
+      });
+    }
+  } catch (error) {
+    console.error("Error rejecting job:", error);
+    res.status(500).json({ 
+      message: "Internal server error",
+      success: false
+    });
+  }
+});
+
 module.exports = adminRouter;

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 import Navigation from "../../components/Navigation";
@@ -9,6 +9,7 @@ import { adminAPI } from "../../services/api";
 
 export default function Viewjobapproval() {
   const { id } = useParams();
+  const navigate = useNavigate();
   console.log(id);
   const [loading, setLoading] = useState(true);
 
@@ -34,21 +35,37 @@ export default function Viewjobapproval() {
         console.log(response);
         const message = response.data.message;
         toast.success(message);
+        setTimeout(() => {
+          navigate("/jobapprovals");
+        }, 2000);
       })
       .catch((error) => {
         console.log(error);
+        toast.error(error.response?.data?.message || "Failed to approve job");
       });
   };
 
   const rejectStatus = (jobID) => {
-    adminAPI.rejectJobStatus(`${jobID}`)
+    if (!jobID) {
+      toast.error("Invalid job ID");
+      return;
+    }
+
+    adminAPI.rejectJobStatus(jobID)
       .then((response) => {
-        console.log(response);
-        const message = response.data.message;
-        toast.success(message);
+        console.log("Reject response:", response);
+        if (response.data.success) {
+          toast.success(response.data.message);
+          setTimeout(() => {
+            navigate("/jobapprovals");
+          }, 2000);
+        } else {
+          toast.error(response.data.message || "Failed to reject job");
+        }
       })
       .catch((error) => {
-        console.log(error);
+        console.error("Reject error:", error);
+        toast.error(error.response?.data?.message || "Failed to reject job");
       });
   };
 
@@ -127,7 +144,7 @@ export default function Viewjobapproval() {
                         updateStatus(data._id);
                       }}
                       type="button"
-                      class="btn btn-outline-primary"
+                      class="btn btn-outline-success"
                     >
                       Approve
                     </button>
@@ -136,7 +153,7 @@ export default function Viewjobapproval() {
                         rejectStatus(data._id);
                       }}
                       type="button" 
-                      class="btn btn-outline-primary"
+                      class="btn btn-outline-danger"
                     >
                       Reject
                     </button>

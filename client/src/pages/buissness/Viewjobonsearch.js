@@ -1,86 +1,79 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 import Navigation from "../../components/Navigation";
 import "./viewjobonsearch.css";
-import { businessAPI } from "../../services/api"; // Import businessAPI
+import { businessAPI } from "../../services/api";
 
 export default function Viewjobonsearch() {
-  const [data, setData] = useState({});
+  const [jobData, setJobData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const { id } = useParams();
 
   useEffect(() => {
-    businessAPI
-      .viewJobOnSearch(`${id}`) // Use businessAPI here
+    if (!id) {
+      setError("No job ID provided");
+      setLoading(false);
+      return;
+    }
+
+    businessAPI.viewJobOnSearch(id)
       .then((response) => {
-        console.log("API Response:", response);
-        const data = response.data.data;
-        if (Array.isArray(data)) {
-          setData(data);
+        if (response.data && response.data.data) {
+          setJobData(response.data.data);
         } else {
-          console.error("API returned non-array data:", data);
-          setData([]);
+          setError("No data received");
         }
+        setLoading(false);
       })
       .catch((error) => {
-        console.log(error);
+        console.error("Error fetching job:", error);
+        setError("Failed to load job details");
+        setLoading(false);
       });
-  }, []);
+  }, [id]);
 
-  const token = localStorage.getItem("token");
-
-  const sendApplication = (jobid) => {
-    try {
-      if (!data || typeof data !== "object") {
-        console.error("Invalid data format:", data);
-        return;
-      }
-
-      businessAPI
-        .apply(jobid, data) // Ensure `data` is in the correct format
-        .then((response) => {
-          console.log(response);
-          const message = response.data.message;
-          toast.success(message);
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-    } catch (error) {
-      console.log(error);
+  const sendApplication = (jobId) => {
+    if (!jobId) {
+      toast.error("Invalid job ID");
+      return;
     }
+
+    const applicationPayload = {
+      jobId: jobId,
+      // Include any other required fields for the application
+    };
+
+    businessAPI.apply(jobId, applicationPayload)
+      .then((response) => {
+        toast.success(response.data.message || "Application submitted successfully");
+      })
+      .catch((error) => {
+        console.error("Application error:", error);
+        toast.error(error.response?.data?.message || "Failed to submit application");
+      });
   };
 
-  const sort = (jobdata) => {
-    if (Array.isArray(jobdata)) {
-      const sortedData = jobdata.sort((a, b) => a.budget - b.budget);
-      console.log("Sorted Data:", sortedData);
-      return sortedData;
-    } else {
-      console.error("jobdata is not an array:", jobdata);
-      return [];
-    }
-  };
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+  if (!jobData) return <div>No job data found</div>;
 
   return (
     <>
       <Navigation />
       <Toaster position="top-center" reverseOrder={false} />
 
-      <div className="vj-main-div container-fluid border rounded  mt-5 p-2">
-        <div
-          className="container-fluid "
-          style={{
-            width: "100%",
-            height: "100px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <h5>{data.title}</h5>
+      <div className="vj-main-div container-fluid border rounded mt-5 p-2">
+        <div className="container-fluid" style={{
+          width: "100%",
+          height: "100px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}>
+          <h5>{jobData.title}</h5>
         </div>
         <div
           className="p-2 border rounded-3"
@@ -88,24 +81,24 @@ export default function Viewjobonsearch() {
         >
           <div>
             <span style={{ fontSize: "small", fontFamily: "serif" }}>category</span>
-            <p>{data.category}</p>
+            <p>{jobData.category}</p>
           </div>
           <div>
             <span style={{ fontSize: "small", fontFamily: "serif" }}>city</span>
-            <p>{data.city}</p>
+            <p>{jobData.city}</p>
           </div>
           <div>
             <span style={{ fontSize: "small", fontFamily: "serif" }}>date</span>
-            <p>{data.city}</p>
+            <p>{jobData.city}</p>
           </div>
           <div>
             <span style={{ fontSize: "small", fontFamily: "serif" }}>budget</span>
-            <p>{data.budget}</p>
+            <p>{jobData.budget}</p>
           </div>
         </div>
         <div className="p-2 mt-4">
           <h6>Description</h6>
-          <p style={{ textAlign: "justify" }}>{data.description}</p>
+          <p style={{ textAlign: "justify" }}>{jobData.description}</p>
 
           <h6 className="mt-5">Images</h6>
           <div className="border rounded" style={{ width: "100%", height: "250px" }}></div>
@@ -113,22 +106,22 @@ export default function Viewjobonsearch() {
           <h6 className="mt-5">Customer details</h6>
           <div className="border rounded p-4" style={{ width: "100%", height: "220px" }}>
             <div>
-              <p>{data.name}</p>
+              <p>{jobData.name}</p>
               <p>
-                {data.house},{data.street}
+                {jobData.house},{jobData.street}
                 <br />
-                {data.town},{data.city}
+                {jobData.town},{jobData.city}
                 <br />
-                {data.district},{data.state}
+                {jobData.district},{jobData.state}
                 <br />
-                {data.pincode}
+                {jobData.pincode}
               </p>
             </div>
           </div>
           <div className="mt-3" style={{ textAlign: "center" }}>
             <button
               onClick={() => {
-                sendApplication(data._id);
+                sendApplication(jobData._id);
               }}
               className="btn btn-primary"
             >
