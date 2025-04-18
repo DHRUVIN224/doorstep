@@ -1,0 +1,1690 @@
+diff --git a/client/src/components/Navigation.js b/client/src/components/Navigation.js
+index 2adc4f1..8be6f8b 100644
+--- a/client/src/components/Navigation.js
++++ b/client/src/components/Navigation.js
+@@ -137,7 +137,7 @@ export default function Navigation() {
+                         Appointments
+                       </NavLink>
+                     </li>
+-                    <li className="nav-item d-none">
++                    <li className="nav-item">
+                       <NavLink className="nav-link " to="/usermessages">
+                         Messages
+                       </NavLink>
+@@ -240,7 +240,7 @@ export default function Navigation() {
+                         </li>
+                       </ul>
+                     </li>
+-                    <li class="nav-item d-none">
++                    <li class="nav-item">
+                       <NavLink
+                         className="nav-link"
+                         activeClassName="active"
+@@ -250,6 +250,7 @@ export default function Navigation() {
+                       </NavLink>
+                     </li>
+                   </ul>
++                  
+                   <div>
+                     <div className="logout-div">
+                       <Avatar sx={{ width: "39px", height: "39px" }} alt="Remy Sharp" src="#">
+diff --git a/client/src/pages/admin/Buissnessverification.js b/client/src/pages/admin/Buissnessverification.js
+index 9211319..d21176f 100644
+--- a/client/src/pages/admin/Buissnessverification.js
++++ b/client/src/pages/admin/Buissnessverification.js
+@@ -27,7 +27,7 @@ export default function Buissnessverification() {
+   }, []);
+ 
+   const approve = (loginId) => {
+-    adminAPI.updateStatus(`/admin/approvebusiness/${loginId}`) // Ensure this endpoint exists in your backend
++    adminAPI.updateStatus(loginId)
+       .then((response) => {
+         console.log(response);
+         const message = response.data.message;
+@@ -39,11 +39,12 @@ export default function Buissnessverification() {
+       })
+       .catch((error) => {
+         console.log(error);
++        toast.error("Failed to approve business: " + error.message);
+       });
+   };
+ 
+   const reject = (loginId) => {
+-    adminAPI.rejectJobStatus(loginId) // Use the correct API method
++    adminAPI.rejectStatus(loginId)
+       .then((response) => {
+         console.log(response);
+         const message = response.data.message;
+@@ -55,6 +56,7 @@ export default function Buissnessverification() {
+       })
+       .catch((error) => {
+         console.log(error);
++        toast.error("Failed to reject business: " + error.message);
+       });
+   };
+ 
+diff --git a/client/src/pages/buissness/Appointments.js b/client/src/pages/buissness/Appointments.js
+index a5a1b35..9d7a018 100644
+--- a/client/src/pages/buissness/Appointments.js
++++ b/client/src/pages/buissness/Appointments.js
+@@ -22,9 +22,19 @@ export default function Appointments() {
+   }, []);
+ 
+   const taskcompleted = (applicationId, jobId) => {
+-    businessAPI.jobFinished(`${applicationId}/${jobId}`)
++    businessAPI.jobFinished(applicationId, jobId)
+       .then((response) => {
+         console.log(response);
++        // Refresh the job list after completing a job
++        businessAPI.viewJobAppointments({})
++          .then((response) => {
++            const jobData = response.data.data;
++            console.log("jobdata after completion:", jobData);
++            setJob(jobData);
++          })
++          .catch((error) => {
++            console.log(error);
++          });
+       })
+       .catch((error) => {
+         console.log(error);
+diff --git a/client/src/pages/buissness/Enquiries.js b/client/src/pages/buissness/Enquiries.js
+index c352ba5..d5836d5 100644
+--- a/client/src/pages/buissness/Enquiries.js
++++ b/client/src/pages/buissness/Enquiries.js
+@@ -1,6 +1,6 @@
+ import React, { useEffect, useState } from "react";
+-import { businessAPI } from "../../services/api";
+-import axios from "axios";
++import { Link } from "react-router-dom";
++import { businessAPI, messageAPI } from "../../services/api";
+ import toast, { Toaster } from "react-hot-toast";
+ import Pagination from "../../components/Pagination";
+ import Navigation from "../../components/Navigation";
+@@ -10,11 +10,8 @@ export default function Enquiries() {
+   const token = localStorage.getItem("token");
+   const [data, setData] = useState([]);
+   useEffect(() => {
+-    // https://doorstepservice.onrender.com
+-    axios
+-      .get("http://localhost:5000/buissness/enquiries", {
+-        
+-      })
++    // Replace direct axios call with businessAPI
++    businessAPI.viewEnquiries()
+       .then((response) => {
+         console.log(response, "response");
+         const bookingData = response.data.data;
+@@ -65,6 +62,24 @@ export default function Enquiries() {
+       });
+   };
+ 
++  const handleCall = (phoneNumber) => {
++    if (!phoneNumber) {
++      toast.error("Phone number not available");
++      return;
++    }
++    window.location.href = `tel:${phoneNumber}`;
++    toast.success("Initiating call...");
++  };
++
++  const handleEmail = (email) => {
++    if (!email) {
++      toast.error("Email not available");
++      return;
++    }
++    window.location.href = `mailto:${email}?subject=Regarding your booking enquiry`;
++    toast.success("Opening email client...");
++  };
++
+   const [currentPage, setCurrentpage] = useState(1);
+   const [postsPerpage, setPostsperpage] = useState(5);
+ 
+@@ -79,42 +94,70 @@ export default function Enquiries() {
+       <div className="enquiries-div border rounded p-2">
+         {currentPageposts.map((item) => (
+           <div
+-            className="border rounded p-2"
++            className="border rounded p-2 mb-3"
+             style={{
+               backgroundColor: "white",
+               display: "flex",
+-              alignItems: "center",
++              flexDirection: "column",
+             }}
+           >
+-            <div>
+-              <h5>{item.title}</h5>
+-              <p>
+-                {item.jobtype}
+-                <br />
+-                {item.date}
+-                <br /> <br />
+-                Description : <br />
+-                {item.description}
+-              </p>
+-            </div>
++            <div className="d-flex align-items-center mb-2">
++              <div className="flex-grow-1">
++                <h5>{item.title}</h5>
++                <p>
++                  {item.jobtype}
++                  <br />
++                  {item.date}
++                  <br /> <br />
++                  Description : <br />
++                  {item.description}
++                </p>
++              </div>
++
++              <div className="d-flex flex-column align-items-end">
++                <div className="mb-2">
++                  <button
++                    onClick={() => {
++                      updateStatus(item._id);
++                    }}
++                    className="btn btn-primary me-2"
++                  >
++                    Approve
++                  </button>
++                  <button
++                    onClick={() => {
++                      rejectBooking(item._id);
++                    }}
++                    className="btn btn-danger"
++                  >
++                    Reject
++                  </button>
++                </div>
+ 
+-            <div style={{ marginLeft: "auto" }}>
+-              <button
+-                onClick={() => {
+-                  updateStatus(item._id);
+-                }}
+-                className="btn btn-primary"
+-              >
+-                Approve
+-              </button>
+-              <button
+-                onClick={() => {
+-                  rejectBooking(item._id);
+-                }}
+-                className="btn btn-danger"
+-              >
+-                Reject
+-              </button>
++                <div className="btn-group btn-group-sm" role="group" aria-label="Contact options">
++                  <button 
++                    type="button" 
++                    className="btn btn-outline-primary"
++                    onClick={() => handleCall(item.phoneNumber)}
++                  >
++                    Call
++                  </button>
++                  <Link
++                    to={`/viewmessage/${item.userId}`}
++                    type="button"
++                    className="btn btn-outline-primary"
++                  >
++                    Message
++                  </Link>
++                  <button 
++                    type="button" 
++                    className="btn btn-outline-primary"
++                    onClick={() => handleEmail(item.email)}
++                  >
++                    Email
++                  </button>
++                </div>
++              </div>
+             </div>
+           </div>
+         ))}
+diff --git a/client/src/pages/buissness/Messages.js b/client/src/pages/buissness/Messages.js
+index 8706cd1..bf8fc26 100644
+--- a/client/src/pages/buissness/Messages.js
++++ b/client/src/pages/buissness/Messages.js
+@@ -1,62 +1,87 @@
+ import React, { useEffect, useState } from "react";
+-import axios from "axios";
+ import { Link } from "react-router-dom";
+ import Navigation from "../../components/Navigation";
+-import { messageAPI } from "../../services/api"; // Import messageAPI
++import { messageAPI } from "../../services/api";
++import toast, { Toaster } from "react-hot-toast";
++import "./messages.css";
+ 
+ export default function Messages() {
+   const [data, setData] = useState([]);
+-  const token = localStorage.getItem("token");
++  const [loading, setLoading] = useState(true);
+ 
+   useEffect(() => {
+     messageAPI
+-      .viewBusinessMessage() // Use messageAPI here
++      .viewBusinessMessage()
+       .then((response) => {
+-        console.log(response);
+         const data = response.data.data;
+-        console.log("messagedata", data);
+         setData(data);
++        setLoading(false);
+       })
+       .catch((error) => {
+         console.log(error);
++        toast.error("Failed to load messages");
++        setLoading(false);
+       });
+   }, []);
+ 
+   return (
+     <>
+       <Navigation />
+-      buissness
+-      <div
+-        className="border rounded p-2"
+-        style={{ margin: "auto", marginTop: "50px", width: "35%", height: "500px" }}
+-      >
+-        {data.map((item) => (
+-          <div
+-            className="border rounded p-2"
+-            style={{ height: "80px", display: "flex", alignItems: "center" }}
+-          >
+-            <div
+-              style={{
+-                borderRadius: "50%",
+-                height: "60px",
+-                width: "60px",
+-                backgroundColor: "grey",
+-              }}
+-            ></div>
+-            <div className="p-1">
+-              <h6>{item.name}</h6>
+-            </div>
+-            <div style={{ marginLeft: "auto " }}>
+-              <Link
+-                to={`/viewmessage/${item.loginId}`}
+-                type="button"
+-                class="btn btn-outline-primary"
+-              >
+-                View
+-              </Link>
++      <Toaster position="top-center" />
++      
++      <div className="container-fluid mt-4 mb-5">
++        <div className="row justify-content-center">
++          <div className="col-12">
++            <div className="card message-card shadow">
++              <div className="card-header d-flex align-items-center">
++                <i className="bi bi-chat-left-text-fill me-2" style={{ fontSize: "1.4rem" }}></i>
++                <h5 className="mb-0" style={{ fontSize: "1.4rem" }}>Message Inbox</h5>
++              </div>
++              
++              <div className="card-body p-0">
++                {loading ? (
++                  <div className="text-center py-5">
++                    <div className="spinner-border text-primary" role="status" style={{ width: "3rem", height: "3rem" }}>
++                      <span className="visually-hidden">Loading...</span>
++                    </div>
++                    <p className="mt-3" style={{ fontSize: "1.2rem" }}>Loading messages...</p>
++                  </div>
++                ) : data.length === 0 ? (
++                  <div className="text-center py-5">
++                    <div className="text-muted">
++                      <i className="bi bi-inbox fs-1" style={{ fontSize: "3rem" }}></i>
++                      <p className="mt-3" style={{ fontSize: "1.2rem" }}>No messages yet</p>
++                      <p style={{ fontSize: "1rem" }}>When customers message you, they'll appear here</p>
++                    </div>
++                  </div>
++                ) : (
++                  <div className="list-group list-group-flush">
++                    {data.map((item, index) => (
++                      <Link 
++                        key={index}
++                        to={`/viewmessage/${item.loginId}`} 
++                        className="message-item list-group-item list-group-item-action"
++                      >
++                        <div className="d-flex align-items-center">
++                          <div className="avatar-circle me-3">
++                            {item.name ? item.name.charAt(0).toUpperCase() : "?"}
++                          </div>
++                          <div className="flex-grow-1">
++                            <h6 className="mb-1" style={{ fontSize: "1.2rem" }}>{item.name}</h6>
++                            <small className="text-muted" style={{ fontSize: "1rem" }}>Click to view conversation</small>
++                          </div>
++                          <span className="message-arrow">
++                            <i className="bi bi-chevron-right"></i>
++                          </span>
++                        </div>
++                      </Link>
++                    ))}
++                  </div>
++                )}
++              </div>
+             </div>
+           </div>
+-        ))}
++        </div>
+       </div>
+     </>
+   );
+diff --git a/client/src/pages/buissness/Viewapplication.js b/client/src/pages/buissness/Viewapplication.js
+index ddc1334..3a30133 100644
+--- a/client/src/pages/buissness/Viewapplication.js
++++ b/client/src/pages/buissness/Viewapplication.js
+@@ -1,8 +1,9 @@
+ import React, { useEffect, useState } from "react";
+-import { useParams } from "react-router-dom";
++import { useParams, Link } from "react-router-dom";
+ import axios from "axios";
+ import Navigation from "../../components/Navigation";
+ import { businessAPI } from "../../services/api"; // Import businessAPI
++import toast, { Toaster } from "react-hot-toast";
+ 
+ export default function Viewapplication() {
+   const { id } = useParams();
+@@ -22,9 +23,28 @@ export default function Viewapplication() {
+       });
+   }, []);
+ 
++  const handleCall = () => {
++    if (!data.phoneNumber) {
++      toast.error("Phone number not available");
++      return;
++    }
++    window.location.href = `tel:${data.phoneNumber}`;
++    toast.success("Initiating call...");
++  };
++
++  const handleEmail = () => {
++    if (!data.email) {
++      toast.error("Email not available");
++      return;
++    }
++    window.location.href = `mailto:${data.email}?subject=Regarding your job application`;
++    toast.success("Opening email client...");
++  };
++
+   return (
+     <>
+       <Navigation />
++      <Toaster position="top-center" />
+ 
+       <div
+         className="container-fluid border rounded  mt-5 p-2"
+@@ -86,16 +106,33 @@ export default function Viewapplication() {
+             </div>
+           </div>
+           <div className="mt-3" style={{ textAlign: "center" }}>
+-            <div class="btn-group btn-group-sm" role="group" aria-label="Small button group">
+-              <button type="button" class="btn btn-outline-primary">
++            <div className="btn-group btn-group-sm" role="group" aria-label="Small button group">
++              <button 
++                type="button" 
++                className="btn btn-outline-primary"
++                onClick={handleCall}
++              >
+                 Call
+               </button>
+-              <button type="button" class="btn btn-outline-primary">
++              <button 
++                type="button" 
++                className="btn btn-outline-primary"
++                onClick={handleEmail}
++              >
+                 Email
+               </button>
+-              <button type="button" class="btn btn-outline-primary">
++              <Link
++                to={data.userId ? `/viewmessage/${data.userId}` : "#"} 
++                className="btn btn-outline-primary"
++                onClick={(e) => {
++                  if (!data.userId) {
++                    e.preventDefault();
++                    toast.error("Cannot message this user");
++                  }
++                }}
++              >
+                 Message
+-              </button>
++              </Link>
+             </div>
+           </div>
+         </div>
+diff --git a/client/src/pages/buissness/Viewjoblisting.js b/client/src/pages/buissness/Viewjoblisting.js
+index c9ab7d0..c9b8ff2 100644
+--- a/client/src/pages/buissness/Viewjoblisting.js
++++ b/client/src/pages/buissness/Viewjoblisting.js
+@@ -1,9 +1,10 @@
+ import React, { useEffect, useState } from "react";
+ import "./viewjoblisting.css";
+-import { useParams } from "react-router-dom";
++import { useParams, Link } from "react-router-dom";
+ import axios from "axios";
+ import Navigation from "../../components/Navigation";
+ import { businessAPI } from "../../services/api"; // Import businessAPI
++import toast, { Toaster } from "react-hot-toast";
+ 
+ export default function Viewjoblisting() {
+   const { id } = useParams();
+@@ -26,9 +27,39 @@ export default function Viewjoblisting() {
+ 
+   const [data, setData] = useState({});
+ 
++  const handleApply = () => {
++    businessAPI.apply(id, {})
++      .then(response => {
++        toast.success("Application submitted successfully");
++      })
++      .catch(error => {
++        console.error(error);
++        toast.error("Failed to submit application");
++      });
++  };
++
++  const handleCall = () => {
++    if (!data.phoneNumber) {
++      toast.error("Phone number not available");
++      return;
++    }
++    window.location.href = `tel:${data.phoneNumber}`;
++    toast.success("Initiating call...");
++  };
++
++  const handleEmail = () => {
++    if (!data.email) {
++      toast.error("Email not available");
++      return;
++    }
++    window.location.href = `mailto:${data.email}?subject=Regarding your job listing`;
++    toast.success("Opening email client...");
++  };
++
+   return (
+     <>
+       <Navigation />
++      <Toaster position="top-center" />
+ 
+       <div
+         className="container-fluid border rounded  mt-5 p-2"
+@@ -45,7 +76,7 @@ export default function Viewjoblisting() {
+           }}
+         >
+           <h5>{data.title}</h5>
+-          <button className="btn btn-primary">Apply</button>
++          <button onClick={handleApply} className="btn btn-primary">Apply</button>
+         </div>
+         <div
+           className="p-2 border rounded-3"
+@@ -90,14 +121,31 @@ export default function Viewjoblisting() {
+               </p>
+             </div>
+             <div style={{ textAlign: "center" }}>
+-              <div class="btn-group" role="group" aria-label="Basic outlined example">
+-                <button type="button" class="btn btn-outline-primary">
++              <div className="btn-group" role="group" aria-label="Basic outlined example">
++                <button 
++                  type="button" 
++                  className="btn btn-outline-primary"
++                  onClick={handleCall}
++                >
+                   Call
+                 </button>
+-                <button type="button" class="btn btn-outline-primary">
++                <Link
++                  to={data.userId ? `/viewmessage/${data.userId}` : "#"} 
++                  className="btn btn-outline-primary"
++                  onClick={(e) => {
++                    if (!data.userId) {
++                      e.preventDefault();
++                      toast.error("Cannot message this user");
++                    }
++                  }}
++                >
+                   Message
+-                </button>
+-                <button type="button" class="btn btn-outline-primary">
++                </Link>
++                <button 
++                  type="button" 
++                  className="btn btn-outline-primary"
++                  onClick={handleEmail}
++                >
+                   Email
+                 </button>
+               </div>
+diff --git a/client/src/pages/buissness/Viewjobonsearch.js b/client/src/pages/buissness/Viewjobonsearch.js
+index 5502283..68ae263 100644
+--- a/client/src/pages/buissness/Viewjobonsearch.js
++++ b/client/src/pages/buissness/Viewjobonsearch.js
+@@ -1,5 +1,5 @@
+ import React, { useEffect, useState } from "react";
+-import { useParams } from "react-router-dom";
++import { useParams, Link } from "react-router-dom";
+ import toast, { Toaster } from "react-hot-toast";
+ import Navigation from "../../components/Navigation";
+ import "./viewjobonsearch.css";
+@@ -56,6 +56,24 @@ export default function Viewjobonsearch() {
+       });
+   };
+ 
++  const handleCall = () => {
++    if (!jobData || !jobData.phoneNumber) {
++      toast.error("Phone number not available");
++      return;
++    }
++    window.location.href = `tel:${jobData.phoneNumber}`;
++    toast.success("Initiating call...");
++  };
++
++  const handleEmail = () => {
++    if (!jobData || !jobData.email) {
++      toast.error("Email not available");
++      return;
++    }
++    window.location.href = `mailto:${jobData.email}?subject=Regarding your job listing`;
++    toast.success("Opening email client...");
++  };
++
+   if (loading) return <div>Loading...</div>;
+   if (error) return <div>Error: {error}</div>;
+   if (!jobData) return <div>No job data found</div>;
+@@ -117,6 +135,37 @@ export default function Viewjobonsearch() {
+                 {jobData.pincode}
+               </p>
+             </div>
++            
++            <div className="mt-3 d-flex justify-content-center">
++              <div className="btn-group" role="group" aria-label="Contact Options">
++                <button 
++                  type="button" 
++                  className="btn btn-outline-success"
++                  onClick={handleCall}
++                >
++                  Call
++                </button>
++                <Link
++                  to={jobData.userId ? `/viewmessage/${jobData.userId}` : "#"} 
++                  className="btn btn-outline-success"
++                  onClick={(e) => {
++                    if (!jobData.userId) {
++                      e.preventDefault();
++                      toast.error("Cannot message this user");
++                    }
++                  }}
++                >
++                  Message
++                </Link>
++                <button 
++                  type="button" 
++                  className="btn btn-outline-success"
++                  onClick={handleEmail}
++                >
++                  Email
++                </button>
++              </div>
++            </div>
+           </div>
+           <div className="mt-3" style={{ textAlign: "center" }}>
+             <button
+diff --git a/client/src/pages/buissness/Viewmessage.js b/client/src/pages/buissness/Viewmessage.js
+index 8259155..c3f285d 100644
+--- a/client/src/pages/buissness/Viewmessage.js
++++ b/client/src/pages/buissness/Viewmessage.js
+@@ -1,8 +1,10 @@
+-import React, { useEffect, useState } from "react";
++import React, { useEffect, useState, useRef } from "react";
+ import { useParams } from "react-router-dom";
+ import axios from "axios";
+ import Navigation from "../../components/Navigation";
+ import { messageAPI, businessAPI } from "../../services/api";
++import toast, { Toaster } from "react-hot-toast";
++import "./messages.css";
+ 
+ export default function Viewmessage() {
+   const token = localStorage.getItem("token");
+@@ -10,32 +12,52 @@ export default function Viewmessage() {
+ 
+   const [data, setData] = useState([]);
+   const [userData, setUserdata] = useState({});
++  const [loading, setLoading] = useState(false);
++  const messageInputRef = useRef(null);
++  const chatContainerRef = useRef(null);
+ 
+-  useEffect(() => {
++  const fetchMessages = () => {
+     messageAPI.viewChatMessage(id)
+       .then((response) => {
+-        console.log(response);
+         const messageData = response.data.data;
+-
+         const sortData = messageData.sort((a, b) => parseInt(a.time) - parseInt(b.time));
+         setData(sortData);
++        
++        // Scroll to bottom of chat when messages update
++        setTimeout(() => {
++          if (chatContainerRef.current) {
++            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
++          }
++        }, 100);
+       })
+       .catch((error) => {
+         console.log(error);
++        toast.error("Failed to load messages");
+       });
+-  }, []);
++  };
++
++  useEffect(() => {
++    fetchMessages();
++    
++    // Set up auto-refresh of messages every 5 seconds
++    const interval = setInterval(() => {
++      fetchMessages();
++    }, 5000);
++    
++    return () => clearInterval(interval);
++  }, [id]);
+ 
+   useEffect(() => {
+     businessAPI.viewUserDetails(id)
+       .then((response) => {
+-        console.log(response);
+         const data = response.data.data;
+         setUserdata(data);
+       })
+       .catch((error) => {
+         console.log(error);
++        toast.error("Failed to load user details");
+       });
+-  }, []);
++  }, [id]);
+ 
+   const [replyData, setReplydata] = useState({
+     message: "",
+@@ -49,109 +71,130 @@ export default function Viewmessage() {
+   };
+ 
+   const sendMessage = () => {
+-    if (replyData.message != "") {
+-      messageAPI.saveReplyMessage(id, replyData)
+-        .then((response) => {
+-          console.log(response);
+-        })
+-        .catch((error) => {
+-          console.log(error);
+-        });
++    if (!replyData.message.trim()) {
++      toast.error("Message cannot be empty");
++      return;
++    }
++    
++    setLoading(true);
++    messageAPI.saveReplyMessage(id, replyData)
++      .then((response) => {
++        // Clear input field
++        setReplydata({ message: "" });
++        if (messageInputRef.current) {
++          messageInputRef.current.value = "";
++        }
++        
++        // Refresh messages
++        fetchMessages();
++        setLoading(false);
++        toast.success("Message sent");
++      })
++      .catch((error) => {
++        console.log(error);
++        setLoading(false);
++        toast.error("Failed to send message");
++      });
++  };
++  
++  const handleKeyPress = (e) => {
++    if (e.key === 'Enter' && !e.shiftKey) {
++      e.preventDefault();
++      sendMessage();
+     }
+   };
+ 
+   return (
+     <>
+       <Navigation />
+-      <div
+-        className="border p-3"
+-        style={{
+-          width: "35%",
+-          height: "80px",
+-          margin: "50px auto 0 auto",
+-          display: "flex",
+-          alignItems: "center",
+-        }}
+-      >
+-        <div
+-          style={{
+-            borderRadius: "50%",
+-            height: "60px",
+-            width: "60px",
+-            backgroundColor: "grey",
+-          }}
+-        ></div>
+-        <div className="p-1">
+-          <h6>{userData.name}</h6>
+-        </div>
+-        <div style={{ marginLeft: "auto " }}>
+-          {/* <div class="dropdown-center">
+-            <button
+-              class="btn btn-secondary dropdown-toggle"
+-              type="button"
+-              data-bs-toggle="dropdown"
+-              aria-expanded="false"
+-            >
+-              
+-            </button>
+-            <ul class="dropdown-menu">
+-              <li>
+-                <a class="dropdown-item" href="#">
+-                  Clear Chat
+-                </a>
+-              </li>
+-              
+-            </ul>
+-          </div> */}
+-        </div>
+-      </div>
+-      <div
+-        className="container-fluid border "
+-        style={{
+-          padding: "10px",
+-          width: "35%",
+-          height: "450px",
+-          marginTop: "0px",
+-          overflowY: "auto",
+-          overflowX: "hidden",
+-          borderTopLeftRadius: "0px",
+-          borderTopRightRadius: "0px",
+-        }}
+-      >
+-        {data.map((item) => (
+-          <div className="border rounded p-2">
+-            {item.type == "reply" ? (
+-              <>
+-                <p className=" " style={{ textAlign: "end" }}>
+-                  {item.message}
+-                </p>
+-              </>
+-            ) : (
+-              <>
+-                <p style={{ textAlign: "start" }}>{item.message}</p>
+-              </>
+-            )}
++      <Toaster position="top-center" />
++
++      <div className="container-fluid chat-page-container">
++        <div className="row justify-content-center h-100 mx-0">
++          <div className="col-12 d-flex flex-column">
++            <div className="card message-card shadow border-0">
++              <div className="business-header">
++                <div className="business-info">
++                  <div className="business-avatar">
++                    {userData.name ? userData.name.charAt(0).toUpperCase() : "U"}
++                  </div>
++                  <div className="business-name">
++                    <h5>{userData.name}</h5>
++                    <small>{userData.email}</small>
++                  </div>
++                </div>
++              </div>
++
++              <div 
++                ref={chatContainerRef}
++                className="chat-container" 
++              >
++                {data.length === 0 ? (
++                  <div className="text-center text-muted py-5">
++                    <i className="bi bi-chat-dots fs-1"></i>
++                    <p className="mt-3" style={{ fontSize: "1.2rem" }}>No messages yet</p>
++                    <p className="small" style={{ fontSize: "1rem" }}>Start the conversation by sending a message</p>
++                  </div>
++                ) : (
++                  data.map((item, index) => (
++                    <div key={index} className="mb-4">
++                      {item.type === "reply" ? (
++                        <div className="d-flex justify-content-end">
++                          <div className="message-bubble message-sent">
++                            <p className="mb-0">{item.message}</p>
++                            <div className="message-time">
++                              {new Date(parseInt(item.time)).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
++                            </div>
++                          </div>
++                        </div>
++                      ) : (
++                        <div className="d-flex justify-content-start">
++                          <div className="message-bubble message-received">
++                            <p className="mb-0">{item.message}</p>
++                            <div className="message-time">
++                              {new Date(parseInt(item.time)).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
++                            </div>
++                          </div>
++                        </div>
++                      )}
++                    </div>
++                  ))
++                )}
++              </div>
++
++              <div className="chat-input">
++                <div className="input-group">
++                  <input
++                    ref={messageInputRef}
++                    onChange={inputChange}
++                    onKeyPress={handleKeyPress}
++                    type="text"
++                    className="form-control"
++                    name="message"
++                    placeholder="Type your message..."
++                    aria-label="Type your message"
++                    value={replyData.message}
++                    disabled={loading}
++                  />
++                  <button 
++                    onClick={sendMessage} 
++                    className="btn btn-primary" 
++                    type="button" 
++                    disabled={loading}
++                  >
++                    {loading ? (
++                      <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
++                    ) : (
++                      <>
++                        <i className="bi bi-send-fill me-1"></i>
++                        Send
++                      </>
++                    )}
++                  </button>
++                </div>
++              </div>
++            </div>
+           </div>
+-        ))}
+-      </div>
+-      <div
+-        className="border  p-1 mb-5"
+-        style={{ width: "35%", marginLeft: "auto", marginRight: "auto" }}
+-      >
+-        <div class=" " style={{ display: "flex", alignItems: "center" }}>
+-          <input
+-            onChange={inputChange}
+-            style={{ height: "35px" }}
+-            type="text"
+-            class="form-control"
+-            name="message"
+-            id=""
+-            aria-describedby="helpId"
+-            placeholder=""
+-          />
+-          <button onClick={sendMessage} type="button" class="btn btn-primary">
+-            send
+-          </button>
+         </div>
+       </div>
+     </>
+diff --git a/client/src/pages/buissness/messages.css b/client/src/pages/buissness/messages.css
+index e69de29..b660109 100644
+--- a/client/src/pages/buissness/messages.css
++++ b/client/src/pages/buissness/messages.css
+@@ -0,0 +1,225 @@
++.message-card {
++  border-radius: 10px;
++  overflow: hidden;
++  border: none;
++  width: 100%;
++  max-width: 100%;
++  margin: 0 auto;
++  min-height: 85vh;
++  display: flex;
++  flex-direction: column;
++  padding: 15px;
++}
++
++.message-card .card-header {
++  background-color: #4a89dc;
++  color: white;
++  padding: 20px 25px;
++  font-weight: 500;
++  font-size: 1.2rem;
++  display: flex;
++  align-items: center;
++  justify-content: flex-start;
++  width: 100%;
++}
++
++.avatar-circle {
++  width: 60px;
++  height: 60px;
++  border-radius: 50%;
++  background-color: #4a89dc;
++  color: white;
++  display: flex;
++  align-items: center;
++  justify-content: center;
++  font-weight: bold;
++  font-size: 22px;
++  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
++  border: 2px solid white;
++}
++
++.message-item {
++  padding: 18px 25px;
++  transition: all 0.2s ease;
++  border-left: 0;
++  border-right: 0;
++}
++
++.message-item:hover {
++  background-color: #f8f9fa;
++  transform: translateY(-1px);
++}
++
++.message-arrow {
++  color: #4a89dc;
++  font-size: 22px;
++}
++
++/* Chat view styles */
++.chat-container {
++  height: 75vh;
++  overflow-y: auto;
++  padding: 20px;
++  background-color: #f5f5f5;
++  flex: 1;
++  width: 100%;
++}
++
++@media (min-height: 700px) {
++  .chat-container {
++    height: 75vh;
++    min-height: 600px;
++  }
++}
++
++@media (min-height: 900px) {
++  .chat-container {
++    height: 80vh;
++    min-height: 700px;
++  }
++}
++
++@media (min-height: 1080px) {
++  .chat-container {
++    height: 80vh;
++    min-height: 800px;
++  }
++}
++
++.message-bubble {
++  max-width: 85%;
++  padding: 16px 22px;
++  margin-bottom: 20px;
++  border-radius: 18px;
++  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
++  position: relative;
++  font-size: 18px;
++  line-height: 1.5;
++}
++
++.message-sent {
++  background-color: #dcf8c6;
++  border-radius: 18px 18px 0 18px;
++  margin-left: auto;
++}
++
++.message-received {
++  background-color: white;
++  border-radius: 18px 18px 18px 0;
++}
++
++.message-time {
++  font-size: 14px;
++  color: #8f8f8f;
++  text-align: right;
++  margin-top: 5px;
++}
++
++.chat-input {
++  background-color: white;
++  border-top: 1px solid #e0e0e0;
++  padding: 20px 25px;
++  width: 100%;
++}
++
++.chat-input .form-control {
++  padding: 15px 20px;
++  font-size: 18px;
++  border-radius: 25px 0 0 25px;
++  height: auto;
++}
++
++.chat-input .btn {
++  padding: 15px 25px;
++  border-radius: 0 25px 25px 0;
++  font-size: 18px;
++}
++
++.chat-header {
++  display: flex;
++  align-items: center;
++  justify-content: flex-start;
++  padding: 20px 25px;
++  background-color: #4a89dc;
++  color: white;
++  width: 100%;
++}
++
++.chat-header-avatar {
++  width: 55px;
++  height: 55px;
++  border-radius: 50%;
++  background-color: white;
++  color: #4a89dc;
++  display: flex;
++  align-items: center;
++  justify-content: center;
++  font-weight: bold;
++  margin-right: 20px;
++  font-size: 24px;
++}
++
++.chat-header-info {
++  display: flex;
++  flex-direction: column;
++}
++
++.business-header {
++  background-color: #4a89dc;
++  padding: 25px;
++  color: white;
++  display: flex;
++  align-items: center;
++  width: 100%;
++  position: relative;
++  height: 110px;
++}
++
++.business-info {
++  display: flex;
++  align-items: center;
++  position: absolute;
++  left: 25px;
++  top: 50%;
++  transform: translateY(-50%);
++  z-index: 2;
++}
++
++.business-avatar {
++  width: 70px;
++  height: 70px;
++  border-radius: 50%;
++  background-color: white;
++  color: #4a89dc;
++  display: flex;
++  align-items: center;
++  justify-content: center;
++  font-weight: bold;
++  margin-right: 20px;
++  font-size: 28px;
++  border: 2px solid white;
++}
++
++.business-name {
++  display: flex;
++  flex-direction: column;
++}
++
++.business-name h5 {
++  margin-bottom: 5px;
++  font-size: 1.5rem;
++  font-weight: 500;
++}
++
++.business-name small {
++  font-size: 1.1rem;
++  opacity: 0.8;
++}
++
++/* Full height layout for chat pages */
++.chat-page-container {
++  min-height: 90vh; 
++  padding: 20px;
++  width: 100%;
++  max-width: 100%;
++}
+diff --git a/client/src/pages/user/Buissnessonsearch.js b/client/src/pages/user/Buissnessonsearch.js
+index 4c86c58..7cfa60b 100644
+--- a/client/src/pages/user/Buissnessonsearch.js
++++ b/client/src/pages/user/Buissnessonsearch.js
+@@ -142,7 +142,7 @@ export default function Buissnessonsearch() {
+             <div>
+               <h5>Contact</h5>
+               <p className="mt-3">
+-                Ph: 9858658458 <br />
++                Ph: 1234567890 <br />
+                 Email: example@email.com
+               </p>
+               <div class="btn-group btn-group-sm" role="group" aria-label="default button group">
+diff --git a/client/src/pages/user/Usermessage.js b/client/src/pages/user/Usermessage.js
+index 7ed2896..7c4293c 100644
+--- a/client/src/pages/user/Usermessage.js
++++ b/client/src/pages/user/Usermessage.js
+@@ -1,60 +1,87 @@
+ import React, { useEffect, useState } from "react";
+-import axios from "axios";
+ import { Link } from "react-router-dom";
+ import Navigation from "../../components/Navigation";
+-import { messageAPI } from "../../services/api"; // Import messageAPI
++import { messageAPI } from "../../services/api";
++import toast, { Toaster } from "react-hot-toast";
++import "../buissness/messages.css";
+ 
+ export default function Usermessage() {
+-  const token = localStorage.getItem("token");
+   const [data, setData] = useState([]);
++  const [loading, setLoading] = useState(true);
+ 
+   useEffect(() => {
+     messageAPI
+-      .viewMessage() // Use messageAPI here
++      .viewMessage()
+       .then((response) => {
+-        console.log(response);
+         const messageData = response.data.data;
+         setData(messageData);
++        setLoading(false);
+       })
+       .catch((error) => {
+         console.log(error);
++        toast.error("Failed to load messages");
++        setLoading(false);
+       });
+   }, []);
+ 
+   return (
+     <>
+       <Navigation />
+-      <div
+-        className="border rounded p-2"
+-        style={{ margin: "auto", marginTop: "50px", width: "35%", height: "500px" }}
+-      >
+-        {data.map((item) => (
+-          <div
+-            className="border rounded p-2"
+-            style={{ height: "80px", display: "flex", alignItems: "center" }}
+-          >
+-            <div
+-              style={{
+-                borderRadius: "50%",
+-                height: "60px",
+-                width: "60px",
+-                backgroundColor: "grey",
+-              }}
+-            ></div>
+-            <div className="p-1">
+-              <h6>{item.businessname}</h6>
+-            </div>
+-            <div style={{ marginLeft: "auto " }}>
+-              <Link
+-                to={`/viewuserchat/${item.loginId}`}
+-                type="button"
+-                class="btn btn-outline-primary"
+-              >
+-                View
+-              </Link>
++      <Toaster position="top-center" />
++      
++      <div className="container-fluid mt-4 mb-5">
++        <div className="row justify-content-center">
++          <div className="col-12">
++            <div className="card message-card shadow">
++              <div className="card-header d-flex align-items-center">
++                <i className="bi bi-chat-left-text-fill me-2" style={{ fontSize: "1.4rem" }}></i>
++                <h5 className="mb-0" style={{ fontSize: "1.4rem" }}>My Messages</h5>
++              </div>
++              
++              <div className="card-body p-0">
++                {loading ? (
++                  <div className="text-center py-5">
++                    <div className="spinner-border text-primary" role="status" style={{ width: "3rem", height: "3rem" }}>
++                      <span className="visually-hidden">Loading...</span>
++                    </div>
++                    <p className="mt-3" style={{ fontSize: "1.2rem" }}>Loading your messages...</p>
++                  </div>
++                ) : data.length === 0 ? (
++                  <div className="text-center py-5">
++                    <div className="text-muted">
++                      <i className="bi bi-inbox fs-1" style={{ fontSize: "3rem" }}></i>
++                      <p className="mt-3" style={{ fontSize: "1.2rem" }}>No messages yet</p>
++                      <p style={{ fontSize: "1rem" }}>When you message service providers, they'll appear here</p>
++                    </div>
++                  </div>
++                ) : (
++                  <div className="list-group list-group-flush">
++                    {data.map((item, index) => (
++                      <Link 
++                        key={index}
++                        to={`/viewuserchat/${item.loginId}`} 
++                        className="message-item list-group-item list-group-item-action"
++                      >
++                        <div className="d-flex align-items-center">
++                          <div className="avatar-circle me-3">
++                            {item.businessname ? item.businessname.charAt(0).toUpperCase() : "?"}
++                          </div>
++                          <div className="flex-grow-1">
++                            <h6 className="mb-1" style={{ fontSize: "1.2rem" }}>{item.businessname}</h6>
++                            <small className="text-muted" style={{ fontSize: "1rem" }}>Click to view conversation</small>
++                          </div>
++                          <span className="message-arrow">
++                            <i className="bi bi-chevron-right"></i>
++                          </span>
++                        </div>
++                      </Link>
++                    ))}
++                  </div>
++                )}
++              </div>
+             </div>
+           </div>
+-        ))}
++        </div>
+       </div>
+     </>
+   );
+diff --git a/client/src/pages/user/Viewuserchat.js b/client/src/pages/user/Viewuserchat.js
+index 89a54d8..2f45188 100644
+--- a/client/src/pages/user/Viewuserchat.js
++++ b/client/src/pages/user/Viewuserchat.js
+@@ -1,156 +1,198 @@
+-import React, { useEffect, useState } from "react";
++import React, { useEffect, useState, useRef } from "react";
+ import { useParams } from "react-router-dom";
+ import axios from "axios";
+ import Navigation from "../../components/Navigation";
+ import { userAPI, messageAPI } from "../../services/api";
++import toast, { Toaster } from "react-hot-toast";
++import "../buissness/messages.css";
+ 
+ export default function Viewuserchat() {
+   const { id } = useParams();
+   const token = localStorage.getItem("token");
+-  console.log(token);
+   const [data, setData] = useState([]);
+   const [buissnessData, setBusinessdata] = useState({});
++  const [loading, setLoading] = useState(false);
++  const messageInputRef = useRef(null);
++  const chatContainerRef = useRef(null);
+ 
+-  useEffect(() => {
++  const fetchMessages = () => {
+     messageAPI.viewUserChat(id)
+       .then((response) => {
+-        console.log(response);
+         const message = response.data.data;
+         const sortData = message.sort((a, b) => parseInt(a.time) - parseInt(b.time));
+         setData(sortData);
++        
++        // Scroll to bottom of chat when messages update
++        setTimeout(() => {
++          if (chatContainerRef.current) {
++            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
++          }
++        }, 100);
+       })
+       .catch((error) => {
+         console.log(error);
++        toast.error("Failed to load messages");
+       });
+-  }, []);
++  };
++
++  useEffect(() => {
++    fetchMessages();
++    
++    // Set up auto-refresh of messages every 5 seconds
++    const interval = setInterval(() => {
++      fetchMessages();
++    }, 5000);
++    
++    return () => clearInterval(interval);
++  }, [id]);
+ 
+   useEffect(() => {
+     userAPI.viewBusinessDetails(id)
+       .then((response) => {
+-        console.log(response);
+         const data = response.data.data;
+         setBusinessdata(data);
+       })
+       .catch((error) => {
+         console.log(error);
++        toast.error("Failed to load business details");
+       });
+-  }, []);
++  }, [id]);
+ 
+   const [messageData, setMessageData] = useState({
+     message: "",
+   });
+-  console.log("messageData", messageData);
+ 
+   const inputChange = (event) => {
+     const name = event.target.name;
+     const value = event.target.value;
+-    console.log("name", name);
+-
+     setMessageData({ ...messageData, [name]: value });
+   };
++  
+   const sendMessage = () => {
++    if (!messageData.message.trim()) {
++      toast.error("Message cannot be empty");
++      return;
++    }
++    
++    setLoading(true);
+     messageAPI.sendMessage(id, messageData)
+       .then((response) => {
+-        console.log(response);
++        // Clear input field
++        setMessageData({ message: "" });
++        if (messageInputRef.current) {
++          messageInputRef.current.value = "";
++        }
++        
++        // Refresh messages
++        fetchMessages();
++        setLoading(false);
++        toast.success("Message sent");
+       })
+       .catch((error) => {
+         console.log(error);
++        setLoading(false);
++        toast.error("Failed to send message");
+       });
+   };
+-  console.log("data", data);
++  
++  const handleKeyPress = (e) => {
++    if (e.key === 'Enter' && !e.shiftKey) {
++      e.preventDefault();
++      sendMessage();
++    }
++  };
++
+   return (
+     <>
+       <Navigation />
++      <Toaster position="top-center" />
+ 
+-      <div
+-        className="border p-3"
+-        style={{
+-          width: "35%",
+-          height: "80px",
+-          margin: "50px auto 0 auto",
+-          display: "flex",
+-          alignItems: "center",
+-        }}
+-      >
+-        <div
+-          style={{
+-            borderRadius: "50%",
+-            height: "60px",
+-            width: "60px",
+-            backgroundColor: "grey",
+-          }}
+-        ></div>
+-        <div className="p-1">
+-          <h6>{buissnessData.businessname}</h6>
+-        </div>
+-        <div style={{ marginLeft: "auto " }}>
+-          {/* <div class="dropdown-center">
+-            <button
+-              class="btn btn-secondary dropdown-toggle"
+-              type="button"
+-              data-bs-toggle="dropdown"
+-              aria-expanded="false"
+-            >
+-              
+-            </button>
+-            <ul class="dropdown-menu">
+-              <li>
+-                <a class="dropdown-item" href="#">
+-                  Clear Chat
+-                </a>
+-              </li>
+-              
+-            </ul>
+-          </div> */}
+-        </div>
+-      </div>
+-      <div
+-        className="container-fluid border "
+-        style={{
+-          padding: "10px",
+-          width: "35%",
+-          height: "450px",
+-          marginTop: "0px",
+-          overflowY: "auto",
+-          overflowX: "hidden",
+-          borderTopLeftRadius: "0px",
+-          borderTopRightRadius: "0px",
+-        }}
+-      >
+-        {data.map((item) => (
+-          <div className="border rounded p-2">
+-            {item.type == "sent" ? (
+-              <>
+-                <p className=" " style={{ textAlign: "end" }}>
+-                  {item.message}
+-                </p>
+-              </>
+-            ) : (
+-              <>
+-                <p style={{ textAlign: "start" }}>{item.message}</p>
+-              </>
+-            )}
++      <div className="container-fluid chat-page-container">
++        <div className="row justify-content-center h-100 mx-0">
++          <div className="col-12 d-flex flex-column">
++            <div className="card message-card shadow border-0">
++              <div className="business-header">
++                <div className="business-info">
++                  <div className="business-avatar">
++                    {buissnessData.businessname ? buissnessData.businessname.charAt(0).toUpperCase() : "B"}
++                  </div>
++                  <div className="business-name">
++                    <h5>{buissnessData.businessname}</h5>
++                    <small>{buissnessData.category}</small>
++                  </div>
++                </div>
++              </div>
++
++              <div 
++                ref={chatContainerRef}
++                className="chat-container" 
++              >
++                {data.length === 0 ? (
++                  <div className="text-center text-muted py-5">
++                    <i className="bi bi-chat-dots fs-1"></i>
++                    <p className="mt-3" style={{ fontSize: "1.2rem" }}>No messages yet</p>
++                    <p className="small" style={{ fontSize: "1rem" }}>Start the conversation by sending a message</p>
++                  </div>
++                ) : (
++                  data.map((item, index) => (
++                    <div key={index} className="mb-4">
++                      {item.type === "sent" ? (
++                        <div className="d-flex justify-content-end">
++                          <div className="message-bubble message-sent">
++                            <p className="mb-0">{item.message}</p>
++                            <div className="message-time">
++                              {new Date(parseInt(item.time)).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
++                            </div>
++                          </div>
++                        </div>
++                      ) : (
++                        <div className="d-flex justify-content-start">
++                          <div className="message-bubble message-received">
++                            <p className="mb-0">{item.message}</p>
++                            <div className="message-time">
++                              {new Date(parseInt(item.time)).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
++                            </div>
++                          </div>
++                        </div>
++                      )}
++                    </div>
++                  ))
++                )}
++              </div>
++
++              <div className="chat-input">
++                <div className="input-group">
++                  <input
++                    ref={messageInputRef}
++                    onChange={inputChange}
++                    onKeyPress={handleKeyPress}
++                    type="text"
++                    className="form-control"
++                    name="message"
++                    placeholder="Type your message..."
++                    aria-label="Type your message"
++                    value={messageData.message}
++                    disabled={loading}
++                  />
++                  <button 
++                    onClick={sendMessage} 
++                    className="btn btn-primary" 
++                    type="button" 
++                    disabled={loading}
++                  >
++                    {loading ? (
++                      <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
++                    ) : (
++                      <>
++                        <i className="bi bi-send-fill me-1"></i>
++                        Send
++                      </>
++                    )}
++                  </button>
++                </div>
++              </div>
++            </div>
+           </div>
+-        ))}
+-      </div>
+-      <div
+-        className="border  p-1 mb-5"
+-        style={{ width: "35%", marginLeft: "auto", marginRight: "auto" }}
+-      >
+-        <div class=" " style={{ display: "flex", alignItems: "center" }}>
+-          <input
+-            onChange={inputChange}
+-            style={{ height: "35px" }}
+-            type="text"
+-            class="form-control"
+-            name="message"
+-            id=""
+-            aria-describedby="helpId"
+-            placeholder=""
+-          />
+-          <button onClick={sendMessage} type="button" class="btn btn-primary">
+-            send
+-          </button>
+         </div>
+       </div>
+     </>
+diff --git a/client/src/services/api.js b/client/src/services/api.js
+index 05114c7..e48fd5d 100644
+--- a/client/src/services/api.js
++++ b/client/src/services/api.js
+@@ -74,13 +74,15 @@ export const businessAPI = {
+   viewBookingDetails: (id) => api.get(`/buissness/bookingappointments/${id}`),
+   updateBooking: (bookingId) => api.get(`/buissness/updatebooking/${bookingId}`),
+   acceptBooking: (bookingId) => api.get(`/buissness/acceptbooking/${bookingId}`),
+-  rejectBooking: (bookingId) => api.get(`/buissness/rejectbooking/${bookingId}`)
++  rejectBooking: (bookingId) => api.get(`/buissness/rejectbooking/${bookingId}`),
++  viewEnquiries: () => api.get('/buissness/enquiries')
+ };
+ 
+ export const adminAPI = {
+   viewBusinessVerification: () => api.get('/admin/buissnessverification'),
+   viewBusinessProfile: (id) => api.get(`/admin/viewbuissnessprofile/${id}`),
+   updateStatus: (loginId) => api.get(`/admin/updatestatus/${loginId}`),
++  rejectStatus: (loginId) => api.get(`/admin/rejectstatus/${loginId}`),
+   jobApprovals: () => api.get('/admin/jobapprovals'),
+   viewJobPost: (id) => api.get(`/admin/viewjobpost/${id}`),
+   updateJobStatus: (jobId) => api.get(`/admin/updatejobstatus/${jobId}`),
+diff --git a/server/src/routes/adminRouter.js b/server/src/routes/adminRouter.js
+index f13905e..dd559dc 100644
+--- a/server/src/routes/adminRouter.js
++++ b/server/src/routes/adminRouter.js
+@@ -144,6 +144,38 @@ adminRouter.get("/updatestatus/:Id", checkAuthAdmin, async (req, res) => {
+   }
+ });
+ 
++// reject business
++adminRouter.get("/rejectstatus/:Id", checkAuthAdmin, async (req, res) => {
++  const buissnessId = req.params.Id;
++  console.log("buissnessId for rejection", buissnessId);
++
++  try {
++    const updateStatus = await loginModel.findOneAndUpdate(
++      { _id: buissnessId },
++      { $set: { status: "2" } },
++      { new: true }
++    );
++
++    if (updateStatus) {
++      return res.status(200).json({
++        message: "Business rejected successfully",
++        success: true
++      });
++    } else {
++      return res.status(400).json({
++        message: "Unable to reject business",
++        success: false
++      });
++    }
++  } catch (error) {
++    console.error(error);
++    res.status(500).json({ 
++      message: "Internal Server Error",
++      success: false 
++    });
++  }
++});
++
+ // list jobs for approval
+ adminRouter.get("/jobapprovals", checkAuthAdmin, async (req, res) => {
+   try {
+diff --git a/update-api-urls.js b/update-api-urls.js
+index 23e5fcb..003d7b9 100644
+--- a/update-api-urls.js
++++ b/update-api-urls.js
+@@ -60,14 +60,17 @@ const API_PATTERNS = {
+   'http://localhost:3000/buissness/updatebooking/': 'businessAPI.updateBooking(',
+   'http://localhost:3000/buissness/acceptbooking/': 'businessAPI.acceptBooking(',
+   'http://localhost:3000/buissness/rejectbooking/': 'businessAPI.rejectBooking(',
++  'http://localhost:3000/buissness/enquiries': 'businessAPI.viewEnquiries',
+   
+   // Admin API
+   'http://localhost:3000/admin/buissnessverification': 'adminAPI.viewBusinessVerification',
+   'http://localhost:3000/admin/viewbuissnessprofile/': 'adminAPI.viewBusinessProfile(',
+   'http://localhost:3000/admin/updatestatus/': 'adminAPI.updateStatus(',
++  'http://localhost:3000/admin/rejectstatus/': 'adminAPI.rejectStatus(',
+   'http://localhost:3000/admin/jobapprovals': 'adminAPI.jobApprovals',
+   'http://localhost:3000/admin/viewjobpost/': 'adminAPI.viewJobPost(',
+   'http://localhost:3000/admin/updatejobstatus/': 'adminAPI.updateJobStatus(',
++  'http://localhost:3000/admin/rejectjobstatus/': 'adminAPI.rejectJobStatus(',
+   
+   // Message API
+   'http://localhost:3000/message/viewmessage': 'messageAPI.viewMessage',

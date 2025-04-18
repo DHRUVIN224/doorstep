@@ -142,7 +142,7 @@ export default function Buissnessonsearch() {
             <div>
               <h5>Contact</h5>
               <p className="mt-3">
-                Ph: 9858658458 <br />
+                Ph: 1234567890 <br />
                 Email: example@email.com
               </p>
               <div class="btn-group btn-group-sm" role="group" aria-label="default button group">

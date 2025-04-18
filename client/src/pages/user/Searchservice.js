@@ -56,6 +56,8 @@ export default function Searchservice() {
               <option value="kozhikode">Kozhikode</option>
               <option value="kannur">Kannur</option>
               <option value="kochi">Kochi</option>
+              <option value="ahmedabad">Ahmedabad</option>
+              <option value="mumbai">Mumbai</option>
             </select>
           </div>
           <div className="col-12 col-sm-12 col-md-12 col-lg-4">
@@ -70,6 +72,7 @@ export default function Searchservice() {
               <option value="electrical">Electrical</option>
               <option value="plumbing">Plumbing</option>
               <option value="pestcontrol">PestControl</option>
+              <option value="other">Other</option>
             </select>
           </div>
           <div className="col-12 col-sm-12 col-md-12 col-lg-4">

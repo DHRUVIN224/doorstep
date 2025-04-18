@@ -12,18 +12,40 @@ const applicationModel = require("../models/applicationModel");
 const messageModel = require("../models/messageModel");
 const bookingModel = require("../models/bookingModel");
 const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
+
+// Ensure the uploads directory exists
+const uploadDir = path.join(__dirname, '../../public/images');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+  console.log('Created upload directory at:', uploadDir);
+}
 
 // multer
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "./public/images/");
+    cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
-    cb(null, file.originalname);
-    console.log("originalname", file.originalname);
+    // Create a unique filename with timestamp and original extension
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const extension = path.extname(file.originalname);
+    const filename = uniqueSuffix + extension;
+    console.log("Saving file as:", filename);
+    cb(null, filename);
   },
 });
-const upload = multer({ storage: storage });
+const upload = multer({ 
+  storage: storage,
+  fileFilter: function (req, file, cb) {
+    // Accept images only
+    if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
+      return cb(new Error('Only image files are allowed!'), false);
+    }
+    cb(null, true);
+  }
+});
 
 // User Registration
 

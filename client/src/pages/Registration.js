@@ -379,6 +379,8 @@ export default function Registration() {
                           <option value="kerala">Kerala</option>
                           <option value="karnataka">Karnataka</option>
                           <option value="tamilnadu">TamilNadu</option>
+                          <option value="gujarat">Gujarat</option>
+                          <option value="maharashtra">Maharashtra</option>
                         </select>
                       </div>
 
@@ -398,6 +400,8 @@ export default function Registration() {
                           <option value="kozhikode">Kozhikode</option>
                           <option value="kannur">Kannur</option>
                           <option value="thrissur">Thrissur</option>
+                          <option value="ahmedabad">Ahmedabad</option>
+                          <option value="mumbai">Mumbai</option>
                         </select>
                       </div>
                     </div>
@@ -613,6 +617,8 @@ export default function Registration() {
                         <option value="kerala">Kerala</option>
                         <option value="karnataka">Karnataka</option>
                         <option value="tamilnadu">TamilNadu</option>
+                        <option value="gujarat">Gujarat</option>
+                        <option value="maharashtra">Maharashtra</option>
                       </select>
                     </div>
 
@@ -632,6 +638,8 @@ export default function Registration() {
                         <option value="kozhikode">kozhikode</option>
                         <option value="kannur">kannur</option>
                         <option value="thrissur">thrissur</option>
+                        <option value="ahmedabad">Ahmedabad</option>
+                        <option value="mumbai">Mumbai</option>
                       </select>
                     </div>
 
@@ -651,6 +659,7 @@ export default function Registration() {
                         <option value="electrical">Electrical</option>
                         <option value="plumbing">Plumbing</option>
                         <option value="pestcontrol">Pestcontrol</option>
+                        <option value="other">Other</option>
                       </select>
                     </div>
                   </div>

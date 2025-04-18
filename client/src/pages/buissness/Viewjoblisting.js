@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import "./viewjoblisting.css";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 import Navigation from "../../components/Navigation";
 import { businessAPI } from "../../services/api"; // Import businessAPI
+import toast, { Toaster } from "react-hot-toast";
 
 export default function Viewjoblisting() {
   const { id } = useParams();
@@ -26,9 +27,39 @@ export default function Viewjoblisting() {
 
   const [data, setData] = useState({});
 
+  const handleApply = () => {
+    businessAPI.apply(id, {})
+      .then(response => {
+        toast.success("Application submitted successfully");
+      })
+      .catch(error => {
+        console.error(error);
+        toast.error("Failed to submit application");
+      });
+  };
+
+  const handleCall = () => {
+    if (!data.phoneNumber) {
+      toast.error("Phone number not available");
+      return;
+    }
+    window.location.href = `tel:${data.phoneNumber}`;
+    toast.success("Initiating call...");
+  };
+
+  const handleEmail = () => {
+    if (!data.email) {
+      toast.error("Email not available");
+      return;
+    }
+    window.location.href = `mailto:${data.email}?subject=Regarding your job listing`;
+    toast.success("Opening email client...");
+  };
+
   return (
     <>
       <Navigation />
+      <Toaster position="top-center" />
 
       <div
         className="container-fluid border rounded  mt-5 p-2"
@@ -45,7 +76,7 @@ export default function Viewjoblisting() {
           }}
         >
           <h5>{data.title}</h5>
-          <button className="btn btn-primary">Apply</button>
+          <button onClick={handleApply} className="btn btn-primary">Apply</button>
         </div>
         <div
           className="p-2 border rounded-3"
@@ -90,14 +121,31 @@ export default function Viewjoblisting() {
               </p>
             </div>
             <div style={{ textAlign: "center" }}>
-              <div class="btn-group" role="group" aria-label="Basic outlined example">
-                <button type="button" class="btn btn-outline-primary">
+              <div className="btn-group" role="group" aria-label="Basic outlined example">
+                <button 
+                  type="button" 
+                  className="btn btn-outline-primary"
+                  onClick={handleCall}
+                >
                   Call
                 </button>
-                <button type="button" class="btn btn-outline-primary">
+                <Link
+                  to={data.userId ? `/viewmessage/${data.userId}` : "#"} 
+                  className="btn btn-outline-primary"
+                  onClick={(e) => {
+                    if (!data.userId) {
+                      e.preventDefault();
+                      toast.error("Cannot message this user");
+                    }
+                  }}
+                >
                   Message
-                </button>
-                <button type="button" class="btn btn-outline-primary">
+                </Link>
+                <button 
+                  type="button" 
+                  className="btn btn-outline-primary"
+                  onClick={handleEmail}
+                >
                   Email
                 </button>
               </div>

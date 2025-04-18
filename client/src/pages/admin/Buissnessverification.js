@@ -27,7 +27,7 @@ export default function Buissnessverification() {
   }, []);
 
   const approve = (loginId) => {
-    adminAPI.updateStatus(`/admin/approvebusiness/${loginId}`) // Ensure this endpoint exists in your backend
+    adminAPI.updateStatus(loginId)
       .then((response) => {
         console.log(response);
         const message = response.data.message;
@@ -39,11 +39,12 @@ export default function Buissnessverification() {
       })
       .catch((error) => {
         console.log(error);
+        toast.error("Failed to approve business: " + error.message);
       });
   };
 
   const reject = (loginId) => {
-    adminAPI.rejectJobStatus(loginId) // Use the correct API method
+    adminAPI.rejectStatus(loginId)
       .then((response) => {
         console.log(response);
         const message = response.data.message;
@@ -55,6 +56,7 @@ export default function Buissnessverification() {
       })
       .catch((error) => {
         console.log(error);
+        toast.error("Failed to reject business: " + error.message);
       });
   };
 

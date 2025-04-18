@@ -137,7 +137,7 @@ export default function Navigation() {
                         Appointments
                       </NavLink>
                     </li>
-                    <li className="nav-item d-none">
+                    <li className="nav-item">
                       <NavLink className="nav-link " to="/usermessages">
                         Messages
                       </NavLink>
@@ -240,7 +240,7 @@ export default function Navigation() {
                         </li>
                       </ul>
                     </li>
-                    <li class="nav-item d-none">
+                    <li class="nav-item">
                       <NavLink
                         className="nav-link"
                         activeClassName="active"
@@ -250,6 +250,7 @@ export default function Navigation() {
                       </NavLink>
                     </li>
                   </ul>
+                  
                   <div>
                     <div className="logout-div">
                       <Avatar sx={{ width: "39px", height: "39px" }} alt="Remy Sharp" src="#">

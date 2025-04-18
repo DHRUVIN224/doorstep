@@ -244,6 +244,7 @@ export default function Editjob() {
                       <option value="plumbing">Plumbing</option>
                       <option value="carpentry">Carpentry</option>
                       <option value="pestcontrol">Pest Control</option>
+                      <option value="other">Other</option>
                     </select>
                   </div>
 
@@ -260,6 +261,8 @@ export default function Editjob() {
                       <option value="kozhikode">Kozhikode</option>
                       <option value="kannur">Kannur</option>
                       <option value="vadakara">Vadakara</option>
+                      <option value="ahmedabad">Ahmedabad</option>
+                      <option value="mumbai">Mumbai</option>
                     </select>
                   </div>
 

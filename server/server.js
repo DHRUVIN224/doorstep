@@ -8,12 +8,21 @@ const userRouter = require('./src/routes/userRouter');
 const buissnessRouter = require('./src/routes/buissnessRouter');
 const adminRouter = require('./src/routes/adminRouter');
 const messageRouter = require('./src/routes/messageRouter');
+const path = require('path');
+const fs = require('fs');
 
 const PORT = process.env.PORT || 5000;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
 // Connect to MongoDB
 connectDB();
+
+// Ensure public/images directory exists
+const publicImagesDir = path.join(__dirname, 'public', 'images');
+if (!fs.existsSync(publicImagesDir)) {
+  fs.mkdirSync(publicImagesDir, { recursive: true });
+  console.log('Created public/images directory');
+}
 
 app.use(bodyparser.json())
 app.use(cors({
@@ -22,6 +31,28 @@ app.use(cors({
 }))
 app.use(express.urlencoded({extended:true}))
 
+// Serve static files from the public directory
+app.use('/public', express.static(path.join(__dirname, 'public')));
+
+// Add a test endpoint to check if the server can access images
+app.get('/check-images', (req, res) => {
+  try {
+    const files = fs.readdirSync(publicImagesDir);
+    res.json({ 
+      success: true, 
+      message: 'Image directory accessible',
+      directory: publicImagesDir,
+      files: files
+    });
+  } catch (err) {
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error accessing image directory',
+      error: err.message
+    });
+  }
+});
+
 app.use('/user',userRouter)
 app.use('/buissness',buissnessRouter)
 app.use('/admin',adminRouter)
@@ -29,4 +60,5 @@ app.use('/message',messageRouter)
 
 app.listen(PORT,() => {
     console.log(`Server started on port ${PORT}`)
+    console.log(`Static files being served from: ${path.join(__dirname, 'public')}`)
 })

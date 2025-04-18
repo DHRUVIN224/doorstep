@@ -74,13 +74,15 @@ export const businessAPI = {
   viewBookingDetails: (id) => api.get(`/buissness/bookingappointments/${id}`),
   updateBooking: (bookingId) => api.get(`/buissness/updatebooking/${bookingId}`),
   acceptBooking: (bookingId) => api.get(`/buissness/acceptbooking/${bookingId}`),
-  rejectBooking: (bookingId) => api.get(`/buissness/rejectbooking/${bookingId}`)
+  rejectBooking: (bookingId) => api.get(`/buissness/rejectbooking/${bookingId}`),
+  viewEnquiries: () => api.get('/buissness/enquiries')
 };
 
 export const adminAPI = {
   viewBusinessVerification: () => api.get('/admin/buissnessverification'),
   viewBusinessProfile: (id) => api.get(`/admin/viewbuissnessprofile/${id}`),
   updateStatus: (loginId) => api.get(`/admin/updatestatus/${loginId}`),
+  rejectStatus: (loginId) => api.get(`/admin/rejectstatus/${loginId}`),
   jobApprovals: () => api.get('/admin/jobapprovals'),
   viewJobPost: (id) => api.get(`/admin/viewjobpost/${id}`),
   updateJobStatus: (jobId) => api.get(`/admin/updatejobstatus/${jobId}`),

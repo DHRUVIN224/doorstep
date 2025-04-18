@@ -154,6 +154,7 @@ export default function Postjob() {
                   <option value="electrical">Electrical</option>
                   <option value="plumbing">Plumbing</option>
                   <option value="pestcontrol">Pestcontrol</option>
+                  <option value="other">Other</option>
                 </select>
               </div>
             </div>

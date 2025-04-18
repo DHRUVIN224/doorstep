@@ -11,9 +11,36 @@ export default function Singlejob() {
   const { id } = useParams();
   const [data, setData] = useState({});
   const [address, setAddress] = useState({});
+  const [testImageAccess, setTestImageAccess] = useState(null);
   const navigate = useNavigate();
 
+  // Function to test image server access
+  const testImageServer = () => {
+    const testUrl = "http://localhost:5000/public/images/test-image.txt";
+    console.log("Testing image server access:", testUrl);
+    
+    fetch(testUrl)
+      .then(response => {
+        console.log("Test image response status:", response.status);
+        if (!response.ok) throw new Error(`Status: ${response.status}`);
+        return response.text();
+      })
+      .then(text => {
+        console.log("Test image content:", text);
+        setTestImageAccess({ success: true, message: `Server accessible: ${text}` });
+        toast.success("Image server is accessible");
+      })
+      .catch(error => {
+        console.error("Test image access failed:", error);
+        setTestImageAccess({ success: false, message: `Error: ${error.message}` });
+        toast.error("Failed to access image server");
+      });
+  };
+
   useEffect(() => {
+    // Test the image server when component mounts
+    testImageServer();
+    
     userAPI.profile({
         
       })
@@ -30,9 +57,16 @@ export default function Singlejob() {
   useEffect(() => {
     userAPI.viewSingleJob(`${id}`)
       .then((response) => {
-        console.log(response);
+        console.log("Job data response:", response);
         const jobdata = response.data.data;
         setData(jobdata);
+        
+        // Log image path for debugging
+        if (jobdata && jobdata.image) {
+          console.log("Image path:", `http://localhost:5000/public/images/${jobdata.image}`);
+        } else {
+          console.log("No image available in job data");
+        }
       })
       .catch((error) => {
         console.log(error);
@@ -103,7 +137,31 @@ export default function Singlejob() {
           <p style={{ textAlign: "justify" }}>{data.description}</p>
 
           <h6 className="mt-5">Images</h6>
-          <div className="border rounded" style={{ width: "100%", height: "250px" }}></div>
+          <div className="border rounded" style={{ width: "100%", height: "250px", display: "flex", justifyContent: "center", alignItems: "center", overflow: "hidden", position: "relative" }}>
+            {data.image ? (
+              <img 
+                src={`http://localhost:5000/public/images/${data.image}`} 
+                alt="Job"
+                style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
+                onError={(e) => {
+                  console.error("Image failed to load:", data.image);
+                  console.error("Full image URL:", `http://localhost:5000/public/images/${data.image}`);
+                  e.target.onerror = null;
+                  e.target.src = "https://via.placeholder.com/400x300?text=Image+Not+Available";
+                }}
+              />
+            ) : (
+              <p className="text-muted m-0">No image available</p>
+            )}
+            <div style={{ position: 'absolute', bottom: '5px', right: '5px', fontSize: '10px', color: '#999' }}>
+              {data.image ? `Image ID: ${data.image}` : 'No image'} 
+              {testImageAccess && (
+                <span style={{ marginLeft: '10px', color: testImageAccess.success ? 'green' : 'red' }}>
+                  {testImageAccess.success ? '✓' : '✗'}
+                </span>
+              )}
+            </div>
+          </div>
 
           <h6 className="mt-5">Customer details</h6>
           <div className="border rounded p-4" style={{ width: "100%", height: "220px" }}>

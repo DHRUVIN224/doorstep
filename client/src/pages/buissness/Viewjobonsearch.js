@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import Navigation from "../../components/Navigation";
 import "./viewjobonsearch.css";
@@ -56,6 +56,24 @@ export default function Viewjobonsearch() {
       });
   };
 
+  const handleCall = () => {
+    if (!jobData || !jobData.phoneNumber) {
+      toast.error("Phone number not available");
+      return;
+    }
+    window.location.href = `tel:${jobData.phoneNumber}`;
+    toast.success("Initiating call...");
+  };
+
+  const handleEmail = () => {
+    if (!jobData || !jobData.email) {
+      toast.error("Email not available");
+      return;
+    }
+    window.location.href = `mailto:${jobData.email}?subject=Regarding your job listing`;
+    toast.success("Opening email client...");
+  };
+
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
   if (!jobData) return <div>No job data found</div>;
@@ -101,7 +119,22 @@ export default function Viewjobonsearch() {
           <p style={{ textAlign: "justify" }}>{jobData.description}</p>
 
           <h6 className="mt-5">Images</h6>
-          <div className="border rounded" style={{ width: "100%", height: "250px" }}></div>
+          <div className="border rounded" style={{ width: "100%", height: "250px", display: "flex", justifyContent: "center", alignItems: "center", overflow: "hidden" }}>
+            {jobData.image ? (
+              <img 
+                src={`http://localhost:5000/public/images/${jobData.image}`} 
+                alt="Job"
+                style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
+                onError={(e) => {
+                  console.error("Image failed to load:", jobData.image);
+                  e.target.onerror = null;
+                  e.target.src = "https://via.placeholder.com/400x300?text=Image+Not+Available";
+                }}
+              />
+            ) : (
+              <p className="text-muted m-0">No image available</p>
+            )}
+          </div>
 
           <h6 className="mt-5">Customer details</h6>
           <div className="border rounded p-4" style={{ width: "100%", height: "220px" }}>
@@ -116,6 +149,37 @@ export default function Viewjobonsearch() {
                 <br />
                 {jobData.pincode}
               </p>
+            </div>
+            
+            <div className="mt-3 d-flex justify-content-center">
+              <div className="btn-group" role="group" aria-label="Contact Options">
+                <button 
+                  type="button" 
+                  className="btn btn-outline-success"
+                  onClick={handleCall}
+                >
+                  Call
+                </button>
+                <Link
+                  to={jobData.userId ? `/viewmessage/${jobData.userId}` : "#"} 
+                  className="btn btn-outline-success"
+                  onClick={(e) => {
+                    if (!jobData.userId) {
+                      e.preventDefault();
+                      toast.error("Cannot message this user");
+                    }
+                  }}
+                >
+                  Message
+                </Link>
+                <button 
+                  type="button" 
+                  className="btn btn-outline-success"
+                  onClick={handleEmail}
+                >
+                  Email
+                </button>
+              </div>
             </div>
           </div>
           <div className="mt-3" style={{ textAlign: "center" }}>

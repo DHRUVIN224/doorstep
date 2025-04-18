@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { businessAPI } from "../../services/api";
-import axios from "axios";
+import { Link } from "react-router-dom";
+import { businessAPI, messageAPI } from "../../services/api";
 import toast, { Toaster } from "react-hot-toast";
 import Pagination from "../../components/Pagination";
 import Navigation from "../../components/Navigation";
@@ -10,11 +10,8 @@ export default function Enquiries() {
   const token = localStorage.getItem("token");
   const [data, setData] = useState([]);
   useEffect(() => {
-    // https://doorstepservice.onrender.com
-    axios
-      .get("http://localhost:5000/buissness/enquiries", {
-        
-      })
+    // Replace direct axios call with businessAPI
+    businessAPI.viewEnquiries()
       .then((response) => {
         console.log(response, "response");
         const bookingData = response.data.data;
@@ -65,6 +62,24 @@ export default function Enquiries() {
       });
   };
 
+  const handleCall = (phoneNumber) => {
+    if (!phoneNumber) {
+      toast.error("Phone number not available");
+      return;
+    }
+    window.location.href = `tel:${phoneNumber}`;
+    toast.success("Initiating call...");
+  };
+
+  const handleEmail = (email) => {
+    if (!email) {
+      toast.error("Email not available");
+      return;
+    }
+    window.location.href = `mailto:${email}?subject=Regarding your booking enquiry`;
+    toast.success("Opening email client...");
+  };
+
   const [currentPage, setCurrentpage] = useState(1);
   const [postsPerpage, setPostsperpage] = useState(5);
 
@@ -79,42 +94,70 @@ export default function Enquiries() {
       <div className="enquiries-div border rounded p-2">
         {currentPageposts.map((item) => (
           <div
-            className="border rounded p-2"
+            className="border rounded p-2 mb-3"
             style={{
               backgroundColor: "white",
               display: "flex",
-              alignItems: "center",
+              flexDirection: "column",
             }}
           >
-            <div>
-              <h5>{item.title}</h5>
-              <p>
-                {item.jobtype}
-                <br />
-                {item.date}
-                <br /> <br />
-                Description : <br />
-                {item.description}
-              </p>
-            </div>
+            <div className="d-flex align-items-center mb-2">
+              <div className="flex-grow-1">
+                <h5>{item.title}</h5>
+                <p>
+                  {item.jobtype}
+                  <br />
+                  {item.date}
+                  <br /> <br />
+                  Description : <br />
+                  {item.description}
+                </p>
+              </div>
 
-            <div style={{ marginLeft: "auto" }}>
-              <button
-                onClick={() => {
-                  updateStatus(item._id);
-                }}
-                className="btn btn-primary"
-              >
-                Approve
-              </button>
-              <button
-                onClick={() => {
-                  rejectBooking(item._id);
-                }}
-                className="btn btn-danger"
-              >
-                Reject
-              </button>
+              <div className="d-flex flex-column align-items-end">
+                <div className="mb-2">
+                  <button
+                    onClick={() => {
+                      updateStatus(item._id);
+                    }}
+                    className="btn btn-primary me-2"
+                  >
+                    Approve
+                  </button>
+                  <button
+                    onClick={() => {
+                      rejectBooking(item._id);
+                    }}
+                    className="btn btn-danger"
+                  >
+                    Reject
+                  </button>
+                </div>
+
+                <div className="btn-group btn-group-sm" role="group" aria-label="Contact options">
+                  <button 
+                    type="button" 
+                    className="btn btn-outline-primary"
+                    onClick={() => handleCall(item.phoneNumber)}
+                  >
+                    Call
+                  </button>
+                  <Link
+                    to={`/viewmessage/${item.userId}`}
+                    type="button"
+                    className="btn btn-outline-primary"
+                  >
+                    Message
+                  </Link>
+                  <button 
+                    type="button" 
+                    className="btn btn-outline-primary"
+                    onClick={() => handleEmail(item.email)}
+                  >
+                    Email
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         ))}

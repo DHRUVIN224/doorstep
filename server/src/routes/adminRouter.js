@@ -144,6 +144,38 @@ adminRouter.get("/updatestatus/:Id", checkAuthAdmin, async (req, res) => {
   }
 });
 
+// reject business
+adminRouter.get("/rejectstatus/:Id", checkAuthAdmin, async (req, res) => {
+  const buissnessId = req.params.Id;
+  console.log("buissnessId for rejection", buissnessId);
+
+  try {
+    const updateStatus = await loginModel.findOneAndUpdate(
+      { _id: buissnessId },
+      { $set: { status: "2" } },
+      { new: true }
+    );
+
+    if (updateStatus) {
+      return res.status(200).json({
+        message: "Business rejected successfully",
+        success: true
+      });
+    } else {
+      return res.status(400).json({
+        message: "Unable to reject business",
+        success: false
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ 
+      message: "Internal Server Error",
+      success: false 
+    });
+  }
+});
+
 // list jobs for approval
 adminRouter.get("/jobapprovals", checkAuthAdmin, async (req, res) => {
   try {

@@ -1,62 +1,87 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { Link } from "react-router-dom";
 import Navigation from "../../components/Navigation";
-import { messageAPI } from "../../services/api"; // Import messageAPI
+import { messageAPI } from "../../services/api";
+import toast, { Toaster } from "react-hot-toast";
+import "./messages.css";
 
 export default function Messages() {
   const [data, setData] = useState([]);
-  const token = localStorage.getItem("token");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     messageAPI
-      .viewBusinessMessage() // Use messageAPI here
+      .viewBusinessMessage()
       .then((response) => {
-        console.log(response);
         const data = response.data.data;
-        console.log("messagedata", data);
         setData(data);
+        setLoading(false);
       })
       .catch((error) => {
         console.log(error);
+        toast.error("Failed to load messages");
+        setLoading(false);
       });
   }, []);
 
   return (
     <>
       <Navigation />
-      buissness
-      <div
-        className="border rounded p-2"
-        style={{ margin: "auto", marginTop: "50px", width: "35%", height: "500px" }}
-      >
-        {data.map((item) => (
-          <div
-            className="border rounded p-2"
-            style={{ height: "80px", display: "flex", alignItems: "center" }}
-          >
-            <div
-              style={{
-                borderRadius: "50%",
-                height: "60px",
-                width: "60px",
-                backgroundColor: "grey",
-              }}
-            ></div>
-            <div className="p-1">
-              <h6>{item.name}</h6>
-            </div>
-            <div style={{ marginLeft: "auto " }}>
-              <Link
-                to={`/viewmessage/${item.loginId}`}
-                type="button"
-                class="btn btn-outline-primary"
-              >
-                View
-              </Link>
+      <Toaster position="top-center" />
+      
+      <div className="container-fluid mt-4 mb-5">
+        <div className="row justify-content-center">
+          <div className="col-12">
+            <div className="card message-card shadow">
+              <div className="card-header d-flex align-items-center">
+                <i className="bi bi-chat-left-text-fill me-2" style={{ fontSize: "1.4rem" }}></i>
+                <h5 className="mb-0" style={{ fontSize: "1.4rem" }}>Message Inbox</h5>
+              </div>
+              
+              <div className="card-body p-0">
+                {loading ? (
+                  <div className="text-center py-5">
+                    <div className="spinner-border text-primary" role="status" style={{ width: "3rem", height: "3rem" }}>
+                      <span className="visually-hidden">Loading...</span>
+                    </div>
+                    <p className="mt-3" style={{ fontSize: "1.2rem" }}>Loading messages...</p>
+                  </div>
+                ) : data.length === 0 ? (
+                  <div className="text-center py-5">
+                    <div className="text-muted">
+                      <i className="bi bi-inbox fs-1" style={{ fontSize: "3rem" }}></i>
+                      <p className="mt-3" style={{ fontSize: "1.2rem" }}>No messages yet</p>
+                      <p style={{ fontSize: "1rem" }}>When customers message you, they'll appear here</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="list-group list-group-flush">
+                    {data.map((item, index) => (
+                      <Link 
+                        key={index}
+                        to={`/viewmessage/${item.loginId}`} 
+                        className="message-item list-group-item list-group-item-action"
+                      >
+                        <div className="d-flex align-items-center">
+                          <div className="avatar-circle me-3">
+                            {item.name ? item.name.charAt(0).toUpperCase() : "?"}
+                          </div>
+                          <div className="flex-grow-1">
+                            <h6 className="mb-1" style={{ fontSize: "1.2rem" }}>{item.name}</h6>
+                            <small className="text-muted" style={{ fontSize: "1rem" }}>Click to view conversation</small>
+                          </div>
+                          <span className="message-arrow">
+                            <i className="bi bi-chevron-right"></i>
+                          </span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        ))}
+        </div>
       </div>
     </>
   );

@@ -191,6 +191,7 @@ export default function Joblistings() {
                             <MenuItem value={"electrical"}>Electrical</MenuItem>
                             <MenuItem value={"plumbing"}>Plumbing</MenuItem>
                             <MenuItem value={"pestcontrol"}>pestcontrol</MenuItem>
+                            <MenuItem value={"other"}>Other</MenuItem>
                           </Select>
                         </FormControl>
                       </Box>
@@ -211,6 +212,8 @@ export default function Joblistings() {
                             <MenuItem value={"kozhikode"}>Kozhikode</MenuItem>
                             <MenuItem value={"kannur"}>kannur</MenuItem>
                             <MenuItem value={"kochi"}>Thrissur</MenuItem>
+                            <MenuItem value={"ahmedabad"}>Ahmedabad</MenuItem>
+                            <MenuItem value={"mumbai"}>Mumbai</MenuItem>
                           </Select>
                         </FormControl>
                       </Box>

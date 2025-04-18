@@ -60,14 +60,17 @@ const API_PATTERNS = {
   'http://localhost:3000/buissness/updatebooking/': 'businessAPI.updateBooking(',
   'http://localhost:3000/buissness/acceptbooking/': 'businessAPI.acceptBooking(',
   'http://localhost:3000/buissness/rejectbooking/': 'businessAPI.rejectBooking(',
+  'http://localhost:3000/buissness/enquiries': 'businessAPI.viewEnquiries',
   
   // Admin API
   'http://localhost:3000/admin/buissnessverification': 'adminAPI.viewBusinessVerification',
   'http://localhost:3000/admin/viewbuissnessprofile/': 'adminAPI.viewBusinessProfile(',
   'http://localhost:3000/admin/updatestatus/': 'adminAPI.updateStatus(',
+  'http://localhost:3000/admin/rejectstatus/': 'adminAPI.rejectStatus(',
   'http://localhost:3000/admin/jobapprovals': 'adminAPI.jobApprovals',
   'http://localhost:3000/admin/viewjobpost/': 'adminAPI.viewJobPost(',
   'http://localhost:3000/admin/updatejobstatus/': 'adminAPI.updateJobStatus(',
+  'http://localhost:3000/admin/rejectjobstatus/': 'adminAPI.rejectJobStatus(',
   
   // Message API
   'http://localhost:3000/message/viewmessage': 'messageAPI.viewMessage',

@@ -22,9 +22,19 @@ export default function Appointments() {
   }, []);
 
   const taskcompleted = (applicationId, jobId) => {
-    businessAPI.jobFinished(`${applicationId}/${jobId}`)
+    businessAPI.jobFinished(applicationId, jobId)
       .then((response) => {
         console.log(response);
+        // Refresh the job list after completing a job
+        businessAPI.viewJobAppointments({})
+          .then((response) => {
+            const jobData = response.data.data;
+            console.log("jobdata after completion:", jobData);
+            setJob(jobData);
+          })
+          .catch((error) => {
+            console.log(error);
+          });
       })
       .catch((error) => {
         console.log(error);

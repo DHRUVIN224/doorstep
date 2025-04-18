@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 import Navigation from "../../components/Navigation";
 import { businessAPI } from "../../services/api"; // Import businessAPI
+import toast, { Toaster } from "react-hot-toast";
 
 export default function Viewapplication() {
   const { id } = useParams();
@@ -22,9 +23,28 @@ export default function Viewapplication() {
       });
   }, []);
 
+  const handleCall = () => {
+    if (!data.phoneNumber) {
+      toast.error("Phone number not available");
+      return;
+    }
+    window.location.href = `tel:${data.phoneNumber}`;
+    toast.success("Initiating call...");
+  };
+
+  const handleEmail = () => {
+    if (!data.email) {
+      toast.error("Email not available");
+      return;
+    }
+    window.location.href = `mailto:${data.email}?subject=Regarding your job application`;
+    toast.success("Opening email client...");
+  };
+
   return (
     <>
       <Navigation />
+      <Toaster position="top-center" />
 
       <div
         className="container-fluid border rounded  mt-5 p-2"
@@ -86,16 +106,33 @@ export default function Viewapplication() {
             </div>
           </div>
           <div className="mt-3" style={{ textAlign: "center" }}>
-            <div class="btn-group btn-group-sm" role="group" aria-label="Small button group">
-              <button type="button" class="btn btn-outline-primary">
+            <div className="btn-group btn-group-sm" role="group" aria-label="Small button group">
+              <button 
+                type="button" 
+                className="btn btn-outline-primary"
+                onClick={handleCall}
+              >
                 Call
               </button>
-              <button type="button" class="btn btn-outline-primary">
+              <button 
+                type="button" 
+                className="btn btn-outline-primary"
+                onClick={handleEmail}
+              >
                 Email
               </button>
-              <button type="button" class="btn btn-outline-primary">
+              <Link
+                to={data.userId ? `/viewmessage/${data.userId}` : "#"} 
+                className="btn btn-outline-primary"
+                onClick={(e) => {
+                  if (!data.userId) {
+                    e.preventDefault();
+                    toast.error("Cannot message this user");
+                  }
+                }}
+              >
                 Message
-              </button>
+              </Link>
             </div>
           </div>
         </div>
