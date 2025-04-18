@@ -92,7 +92,7 @@ export default function Viewjoblisting() {
           </div>
           <div>
             <span style={{ fontSize: "small", fontFamily: "serif" }}>date</span>
-            <p>{data.city}</p>
+            <p>{data.date}</p>
           </div>
           <div>
             <span style={{ fontSize: "small", fontFamily: "serif" }}>budget</span>
@@ -109,18 +109,16 @@ export default function Viewjoblisting() {
           <h6 className="mt-5">Customer details</h6>
           <div className="border rounded p-4" style={{ width: "100%", height: "220px" }}>
             <div>
-              <p>Name</p>
+              <p><strong>Name:</strong> {data.userName || 'Not available'}</p>
               <p>
-                Roseville
+                {data.address || 'Address not available'}
                 <br />
-                Backelstreet
-                <br />
-                Kozhikode,Kozhikode,Kerala
-                <br />
-                365245
+                {data.city && data.state ? 
+                  `${data.city}, ${data.state}${data.pincode ? ', ' + data.pincode : ''}` : 
+                  'Location not available'}
               </p>
             </div>
-            <div style={{ textAlign: "center" }}>
+            <div style={{ textAlign: "center", marginTop: "20px" }}>
               <div className="btn-group" role="group" aria-label="Basic outlined example">
                 <button 
                   type="button" 

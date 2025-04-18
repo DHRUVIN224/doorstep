@@ -12,6 +12,7 @@ export default function Viewuserchat() {
   const [data, setData] = useState([]);
   const [buissnessData, setBusinessdata] = useState({});
   const [loading, setLoading] = useState(false);
+  const [messageText, setMessageText] = useState("");
   const messageInputRef = useRef(null);
   const chatContainerRef = useRef(null);
 
@@ -57,31 +58,27 @@ export default function Viewuserchat() {
         toast.error("Failed to load business details");
       });
   }, [id]);
-
-  const [messageData, setMessageData] = useState({
-    message: "",
-  });
-
-  const inputChange = (event) => {
-    const name = event.target.name;
-    const value = event.target.value;
-    setMessageData({ ...messageData, [name]: value });
+  
+  const handleInputChange = (e) => {
+    setMessageText(e.target.value);
   };
   
   const sendMessage = () => {
-    if (!messageData.message.trim()) {
+    if (!messageText.trim()) {
       toast.error("Message cannot be empty");
       return;
     }
     
     setLoading(true);
+    
+    const messageData = {
+      message: messageText
+    };
+    
     messageAPI.sendMessage(id, messageData)
       .then((response) => {
         // Clear input field
-        setMessageData({ message: "" });
-        if (messageInputRef.current) {
-          messageInputRef.current.value = "";
-        }
+        setMessageText("");
         
         // Refresh messages
         fetchMessages();
@@ -102,130 +99,189 @@ export default function Viewuserchat() {
     }
   };
 
-  // Format date for message separators
-  const formatDate = (timestamp) => {
-    const date = new Date(parseInt(timestamp));
-    return date.toLocaleDateString('en-US', { 
-      weekday: 'short', 
-      month: 'short', 
-      day: 'numeric' 
-    });
-  };
-
-  // Group messages by date
-  const groupMessagesByDate = () => {
-    const groups = {};
-    data.forEach(message => {
-      const date = formatDate(message.time);
-      if (!groups[date]) {
-        groups[date] = [];
-      }
-      groups[date].push(message);
-    });
-    return groups;
-  };
-
-  const messageGroups = groupMessagesByDate();
-
   return (
     <>
       <Navigation />
       <Toaster position="top-center" />
 
-      <div className="container chat-page-container" style={{ marginTop: '20px', marginBottom: '20px', height: 'auto' }}>
-        <div className="row justify-content-center">
-          <div className="col-md-10 col-lg-8">
-            <div className="card message-card shadow" style={{ maxHeight: '70vh', minHeight: '60vh' }}>
-              <div className="business-header" style={{ height: '70px', padding: '15px 20px' }}>
-                <div className="business-info">
-                  <div className="business-avatar" style={{ width: '40px', height: '40px', fontSize: '18px' }}>
-                    {buissnessData.businessname ? buissnessData.businessname.charAt(0).toUpperCase() : "B"}
-                  </div>
-                  <div className="business-name">
-                    <h5 style={{ fontSize: '1rem' }}>{buissnessData.businessname}</h5>
-                    <small style={{ fontSize: '0.8rem' }}>{buissnessData.category}</small>
-                  </div>
-                </div>
-              </div>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: 'calc(100vh - 70px)',
+        backgroundColor: '#f8f9fa'
+      }}>
+        <div style={{
+          width: '90%',
+          maxWidth: '800px',
+          borderRadius: '20px',
+          overflow: 'hidden',
+          boxShadow: '0 12px 28px rgba(0, 0, 0, 0.12)',
+          display: 'flex',
+          flexDirection: 'column',
+          height: '80vh',
+          backgroundColor: 'white',
+          border: '1px solid #e1e1e1'
+        }}>
+          <div style={{
+            backgroundColor: '#6c5ce7',
+            padding: '15px 20px',
+            display: 'flex',
+            alignItems: 'center'
+          }}>
+            <div style={{
+              width: '46px',
+              height: '46px',
+              borderRadius: '50%',
+              backgroundColor: 'white',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginRight: '12px',
+              fontSize: '20px',
+              color: '#6c5ce7',
+              fontWeight: 'bold'
+            }}>
+              P
+            </div>
+            <div>
+              <div style={{
+                color: 'white',
+                fontSize: '16px',
+                fontWeight: '600',
+                margin: '0',
+                padding: '0'
+              }}>patel business</div>
+              <div style={{
+                color: 'rgba(255,255,255,0.7)',
+                fontSize: '14px'
+              }}>electrical</div>
+            </div>
+          </div>
 
-              <div 
-                ref={chatContainerRef}
-                className="chat-container" 
-                style={{ flex: 1, minHeight: '300px', maxHeight: 'calc(70vh - 150px)', overflow: 'auto' }}
-              >
-                {data.length === 0 ? (
-                  <div className="empty-chat">
-                    <i className="bi bi-chat-dots" style={{ fontSize: '2.5rem' }}></i>
-                    <p>No messages yet</p>
-                    <small>Start the conversation by sending a message</small>
-                  </div>
-                ) : (
-                  Object.entries(messageGroups).map(([date, messages]) => (
-                    <div key={date}>
-                      <div className="message-date-separator" style={{ margin: '12px 0' }}>
-                        <span style={{ fontSize: '11px' }}>{date}</span>
-                      </div>
-                      {messages.map((item, index) => (
-                        <div key={index} className="mb-2">
-                          {item.type === "sent" ? (
-                            <div className="d-flex justify-content-end">
-                              <div className="message-bubble message-sent" style={{ maxWidth: '65%', padding: '8px 12px', fontSize: '13px' }}>
-                                <p className="mb-0">{item.message}</p>
-                                <div className="message-time" style={{ fontSize: '9px' }}>
-                                  {new Date(parseInt(item.time)).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                                </div>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="d-flex justify-content-start">
-                              <div className="message-bubble message-received" style={{ maxWidth: '65%', padding: '8px 12px', fontSize: '13px' }}>
-                                <p className="mb-0">{item.message}</p>
-                                <div className="message-time" style={{ fontSize: '9px' }}>
-                                  {new Date(parseInt(item.time)).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                                </div>
-                              </div>
-                            </div>
-                          )}
+          <div ref={chatContainerRef} style={{
+            flex: 1,
+            padding: '20px',
+            overflowY: 'auto',
+            backgroundColor: '#f5f7fb'
+          }}>
+            {data.length === 0 ? (
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: '100%',
+                color: '#888'
+              }}>
+                <i className="bi bi-chat-dots" style={{ fontSize: '30px', marginBottom: '10px' }}></i>
+                <p style={{ margin: '5px 0' }}>No messages yet</p>
+                <small>Start the conversation by sending a message</small>
+              </div>
+            ) : (
+              data.map((item, index) => (
+                <div key={index} style={{ marginBottom: '12px' }}>
+                  {item.type === "sent" ? (
+                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                      <div style={{
+                        backgroundColor: 'rgba(243, 243, 243, 0.95)',
+                        color: '#333',
+                        borderRadius: '18px',
+                        padding: '8px 15px',
+                        maxWidth: '70%',
+                        boxShadow: '0 1px 1px rgba(0, 0, 0, 0.05)'
+                      }}>
+                        <div>{item.message}</div>
+                        <div style={{
+                          fontSize: '11px',
+                          color: '#888',
+                          textAlign: 'right',
+                          marginTop: '2px'
+                        }}>
+                          {new Date(parseInt(item.time)).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                         </div>
-                      ))}
+                      </div>
                     </div>
-                  ))
-                )}
-              </div>
-
-              <div className="chat-input" style={{ padding: '12px' }}>
-                <div className="input-group">
-                  <input
-                    ref={messageInputRef}
-                    onChange={inputChange}
-                    onKeyPress={handleKeyPress}
-                    type="text"
-                    className="form-control"
-                    name="message"
-                    placeholder="Type your message..."
-                    aria-label="Type your message"
-                    value={messageData.message}
-                    disabled={loading}
-                    style={{ padding: '8px 15px', fontSize: '13px' }}
-                  />
-                  <button 
-                    onClick={sendMessage} 
-                    className="btn btn-primary d-flex align-items-center justify-content-center" 
-                    type="button" 
-                    disabled={loading}
-                    style={{ width: 'auto', borderRadius: '0 30px 30px 0', padding: '0 15px', height: '38px' }}
-                  >
-                    {loading ? (
-                      <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                    ) : (
-                      <>
-                        <i className="bi bi-send-fill me-2"></i>
-                        Send
-                      </>
-                    )}
-                  </button>
+                  ) : (
+                    <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                      <div style={{
+                        backgroundColor: 'rgba(243, 243, 243, 0.95)',
+                        color: '#333',
+                        borderRadius: '18px',
+                        padding: '8px 15px',
+                        maxWidth: '70%',
+                        boxShadow: '0 1px 1px rgba(0, 0, 0, 0.05)'
+                      }}>
+                        <div>{item.message}</div>
+                        <div style={{
+                          fontSize: '11px',
+                          color: '#888',
+                          textAlign: 'right',
+                          marginTop: '2px'
+                        }}>
+                          {new Date(parseInt(item.time)).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
+              ))
+            )}
+          </div>
+
+          <div style={{
+            padding: '15px 20px',
+            borderTop: '1px solid #f0f0f0',
+            backgroundColor: 'white'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              backgroundColor: '#f5f7fb',
+              borderRadius: '30px',
+              padding: '5px'
+            }}>
+              <input
+                type="text"
+                value={messageText}
+                onChange={handleInputChange}
+                onKeyPress={handleKeyPress}
+                placeholder="Type your message..."
+                disabled={loading}
+                style={{
+                  flex: 1,
+                  border: 'none',
+                  padding: '8px 15px',
+                  borderRadius: '30px',
+                  outline: 'none',
+                  backgroundColor: '#f5f7fb',
+                  fontSize: '14px'
+                }}
+              />
+              <button
+                onClick={sendMessage}
+                disabled={loading}
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  backgroundColor: '#6c5ce7',
+                  color: 'white',
+                  border: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer'
+                }}
+              >
+                {loading ? (
+                  <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-send-fill" viewBox="0 0 16 16">
+                    <path d="M15.964.686a.5.5 0 0 0-.65-.65L.767 5.855H.766l-.452.18a.5.5 0 0 0-.082.887l.41.26.001.002 4.995 3.178 3.178 4.995.002.002.26.41a.5.5 0 0 0 .886-.083zm-1.833 1.89L6.637 10.07l-.215-.338a.5.5 0 0 0-.154-.154l-.338-.215 7.494-7.494 1.178-.471z"/>
+                  </svg>
+                )}
+              </button>
             </div>
           </div>
         </div>
