@@ -8,6 +8,7 @@ const userRouter = require('./src/routes/userRouter');
 const buissnessRouter = require('./src/routes/buissnessRouter');
 const adminRouter = require('./src/routes/adminRouter');
 const messageRouter = require('./src/routes/messageRouter');
+const testRouter = require('./src/routes/testRoutes');
 const path = require('path');
 const fs = require('fs');
 
@@ -34,6 +35,9 @@ app.use(express.urlencoded({extended:true}))
 // Serve static files from the public directory
 app.use('/public', express.static(path.join(__dirname, 'public')));
 
+// Serve static files from public directory
+app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
+
 // Add a test endpoint to check if the server can access images
 app.get('/check-images', (req, res) => {
   try {
@@ -57,6 +61,7 @@ app.use('/user',userRouter)
 app.use('/buissness',buissnessRouter)
 app.use('/admin',adminRouter)
 app.use('/message',messageRouter)
+app.use('/test', testRouter)
 
 app.listen(PORT,() => {
     console.log(`Server started on port ${PORT}`)

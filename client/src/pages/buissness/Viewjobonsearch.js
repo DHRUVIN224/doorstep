@@ -122,7 +122,7 @@ export default function Viewjobonsearch() {
           <div className="border rounded" style={{ width: "100%", height: "250px", display: "flex", justifyContent: "center", alignItems: "center", overflow: "hidden" }}>
             {jobData.image ? (
               <img 
-                src={`http://localhost:5000/public/images/${jobData.image}`} 
+                src={`http://localhost:5000/images/${jobData.image}`} 
                 alt="Job"
                 style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
                 onError={(e) => {

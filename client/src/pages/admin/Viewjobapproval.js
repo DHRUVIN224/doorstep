@@ -6,24 +6,37 @@ import Navigation from "../../components/Navigation";
 import "./viewjobapproval.css";
 import Loading from "../../components/Loading";
 import { adminAPI } from "../../services/api";
+import ImageDebugger from "../../components/ImageDebugger";
+import SmartImage from "../../components/SmartImage";
+
+// Get the server URL from environment or use default
+const SERVER_URL = process.env.REACT_APP_SERVER_URL || 'http://localhost:5000';
 
 export default function Viewjobapproval() {
   const { id } = useParams();
   const navigate = useNavigate();
-  console.log(id);
+  console.log("Job ID:", id);
   const [loading, setLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     adminAPI.viewJobPost(`${id}`)
       .then((response) => {
-        console.log("resssss", response);
-        console.log("hi");
+        console.log("Job data response:", response);
         const data = response.data.data;
+        console.log("Full data object:", data);
+        console.log("Image filename:", data.image);
+        
+        // Log the constructed image URL for debugging
+        const imageUrl = `${SERVER_URL}/images/${data.image}`;
+        console.log("Constructed image URL:", imageUrl);
+        
         setData(data);
         setLoading(false);
       })
       .catch((error) => {
-        console.log(error);
+        console.error("Error fetching job data:", error);
+        setLoading(false);
       });
   }, []);
 
@@ -121,7 +134,53 @@ export default function Viewjobapproval() {
               <p style={{ textAlign: "justify" }}>{data.description}</p>
 
               <h6 className="mt-5">Images</h6>
-              <div className="border rounded" style={{ width: "100%", height: "250px" }}></div>
+              <div className="border rounded p-3 bg-light" style={{ minHeight: '200px' }}>
+                  {data.image ? (
+                    <div className="d-flex justify-content-center align-items-center" style={{ maxHeight: '400px', overflow: 'hidden' }}>
+                      <SmartImage 
+                        filename={data.image}
+                        alt="Job Image"
+                        className="img-fluid"
+                        style={{ 
+                          maxHeight: '100%',
+                          width: '60%',
+                          objectFit: 'contain'
+                        }}
+                        onError={() => setImageError(true)}
+                        fallbackElement={
+                          <div className="text-center p-3">
+                            <p className="text-danger mb-1">Failed to load image</p>
+                            <small className="text-muted">Filename: {data.image}</small>
+                          </div>
+                        }
+                      />
+                    </div>
+                  ) : (
+                    <div className="text-center p-3">
+                      <p className="text-muted">No image available</p>
+                    </div>
+                  )}
+                </div>
+              
+
+              {/* Image Debugger (hidden in production)
+              {data.image && (
+                <div className="mt-3">
+                  <button 
+                    className="btn btn-sm btn-outline-secondary" 
+                    type="button" 
+                    data-bs-toggle="collapse" 
+                    data-bs-target="#imageDebugger" 
+                    aria-expanded="false" 
+                    aria-controls="imageDebugger"
+                  >
+                    Debug Image
+                  </button>
+                  <div className="collapse mt-2" id="imageDebugger">
+                    <ImageDebugger filename={data.image} />
+                  </div>
+                </div>
+              )} */}
 
               <h6 className="mt-5">Customer details</h6>
               <div className="border rounded p-4" style={{ width: "100%", height: "220px" }}>
@@ -138,13 +197,13 @@ export default function Viewjobapproval() {
                   </p>
                 </div>
                 <div style={{ textAlign: "center" }}>
-                  <div class="btn-group" role="group" aria-label="Basic outlined example">
+                  <div className="btn-group" role="group" aria-label="Basic outlined example">
                     <button
                       onClick={() => {
                         updateStatus(data._id);
                       }}
                       type="button"
-                      class="btn btn-outline-success"
+                      className="btn btn-outline-success"
                     >
                       Approve
                     </button>
@@ -153,7 +212,7 @@ export default function Viewjobapproval() {
                         rejectStatus(data._id);
                       }}
                       type="button" 
-                      class="btn btn-outline-danger"
+                      className="btn btn-outline-danger"
                     >
                       Reject
                     </button>

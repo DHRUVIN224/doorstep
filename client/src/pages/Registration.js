@@ -227,57 +227,57 @@ export default function Registration() {
         {form == "user" ? (
           <>
             <div>
-              <div class="row justify-content-center align-items-center ">
-                <div class="col-12 col-sm-12 col-md-12 col-lg-6">
+              <div className="row justify-content-center align-items-center">
+                <div className="col-12 col-sm-12 col-md-12 col-lg-6">
                   <div>
                     {/* form ---------------------------------------------------*/}
-                    <div class="mb-3">
-                      <label for="" class="form-label">
+                    <div className="mb-3">
+                      <label htmlFor="" className="form-label">
                         Name
                       </label>
                       <span className="error-text">{formErrors.name}</span>
                       <input
                         onChange={inputChange}
                         type="text"
-                        class="form-control"
+                        className="form-control"
                         name="name"
                         id=""
                         placeholder=""
                       />
                     </div>
 
-                    <div class="mb-3">
-                      <label for="" class="form-label">
+                    <div className="mb-3">
+                      <label htmlFor="" className="form-label">
                         Username
                       </label>
                       <span className="error-text">{formErrors.username}</span>
                       <input
                         onChange={inputChange}
                         type="text"
-                        class="form-control"
+                        className="form-control"
                         name="username"
                         id=""
                         placeholder=""
                       />
                     </div>
 
-                    <div class="mb-3">
-                      <label for="" class="form-label">
+                    <div className="mb-3">
+                      <label htmlFor="" className="form-label">
                         Email
                       </label>
                       <span className="error-text">{formErrors.email}</span>
                       <input
                         onChange={inputChange}
                         type="email"
-                        class="form-control"
+                        className="form-control"
                         name="email"
                         id=""
                         placeholder="abc@mail.com"
                       />
                     </div>
 
-                    <div class="mb-3">
-                      <label for="" class="form-label">
+                    <div className="mb-3">
+                      <label htmlFor="" className="form-label">
                         Phonenumber
                       </label>
                       <span className="error-text">{formErrors.phonenumber}</span>
@@ -285,15 +285,15 @@ export default function Registration() {
                       <input
                         onChange={inputChange}
                         type="text"
-                        class="form-control"
+                        className="form-control"
                         name="phonenumber"
                         id=""
                         placeholder=""
                       />
                     </div>
 
-                    <div class="mb-3">
-                      <label for="" class="form-label">
+                    <div className="mb-3">
+                      <label htmlFor="" className="form-label">
                         Password
                       </label>
                       <span className="error-text">{formErrors.password}</span>
@@ -301,7 +301,7 @@ export default function Registration() {
                       <input
                         onChange={inputChange}
                         type="password"
-                        class="form-control"
+                        className="form-control"
                         name="password"
                         id=""
                         placeholder=""

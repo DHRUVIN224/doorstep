@@ -76,7 +76,7 @@ export default function Viewjoblisting() {
           }}
         >
           <h5>{data.title}</h5>
-          <button onClick={handleApply} className="btn btn-primary">Apply</button>
+          <button onClick={handleApply} className="btn btn-primary"></button>
         </div>
         <div
           className="p-2 border rounded-3"

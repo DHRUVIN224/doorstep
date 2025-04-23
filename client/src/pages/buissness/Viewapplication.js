@@ -88,7 +88,22 @@ export default function Viewapplication() {
           <p style={{ textAlign: "justify" }}>{data.description}</p>
 
           <h6 className="mt-5">Images</h6>
-          <div className="border rounded" style={{ width: "100%", height: "250px" }}></div>
+          <div className="border rounded" style={{ width: "100%", height: "250px", display: "flex", justifyContent: "center", alignItems: "center", overflow: "hidden" }}>
+            {data.image ? (
+              <img 
+                src={`http://localhost:5000/images/${data.image}`}
+                alt="Job Image"
+                style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
+                onError={(e) => {
+                  console.error("Image failed to load:", data.image);
+                  e.target.onerror = null;
+                  e.target.src = "https://via.placeholder.com/400x300?text=Image+Not+Available";
+                }}
+              />
+            ) : (
+              <p className="text-muted m-0">No image available</p>
+            )}
+          </div>
 
           <h6 className="mt-5">Customer details</h6>
           <div className="border rounded p-4" style={{ width: "100%", height: "220px" }}>
