@@ -113,7 +113,7 @@ export default function Postjob() {
         <div style={{ padding: "10px", marginTop: "10px" }}>
           <form encType="multipart/form-data">
             <div className="mb-3">
-              <label for="jobtitle" className="formlabel">
+              <label htmlFor="jobtitle" className="formlabel">
                 Job Title
               </label>
               <span className="error-text">{formErrors.title}</span>
@@ -125,15 +125,15 @@ export default function Postjob() {
               />
             </div>
 
-            <div class="mb-3">
-              <label for="" class="formlabel">
+            <div className="mb-3">
+              <label htmlFor="" className="formlabel">
                 Description
               </label>
               <span className="error-text">{formErrors.description}</span>
               <textarea
                 onChange={inputChange}
                 style={{ height: "70px" }}
-                class="form-control"
+                className="form-control"
                 name="description"
                 id=""
                 rows="3"
@@ -162,7 +162,7 @@ export default function Postjob() {
             <div className=" row mt-3 ">
               <div className="col-12 col-sm-12 col-lg-6 ">
                 <div className="mb-3">
-                  <label for="exampleInputEmail1" class="formlabel">
+                  <label for="exampleInputEmail1" className="formlabel">
                     Date
                   </label>
                   <span className="error-text">{formErrors.date}</span>
@@ -193,8 +193,8 @@ export default function Postjob() {
               </div>
             </div>
 
-            <div className="mb-4">
-              <label for="formFile" class="formlabel">
+            <div className="mb-3">
+              <label htmlFor="formFile" className="formlabel">
                 Upload images
               </label>
               <span className="error-text">{formErrors.image}</span>
@@ -202,7 +202,7 @@ export default function Postjob() {
               <input
                 onChange={photoChange}
                 name="image"
-                className="form-control  form-control-lg"
+                className="form-control form-control-lg"
                 type="file"
                 id="formFile"
                 style={{ fontSize: "16px" }}

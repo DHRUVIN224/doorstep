@@ -224,7 +224,7 @@ adminRouter.get("/viewjobpost/:id", checkAuthAdmin, async (req, res) => {
             city: { $first: "$city" },
             date: { $first: "$date" },
             budget: { $first: "$budget" },
-
+            image: { $first: "$image" },
             name: { $first: "$result.name" },
             email: { $first: "$result.email" },
             phonenumber: { $first: "$result.phonenumber" },

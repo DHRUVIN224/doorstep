@@ -336,6 +336,7 @@ buissnessRouter.get("/viewjobonsearch/:id", async (req, res) => {
             city: { $first: "$city" },
             date: { $first: "$date" },
             budget: { $first: "$budget" },
+            image: { $first: "$image" },
 
             name: { $first: "$result.name" },
             email: { $first: "$result.email" },
@@ -465,33 +466,34 @@ buissnessRouter.get("/viewapplication/:id", async (req, res) => {
         {
           $unwind: "$result",
         },
-        // {
-        //   $match: {
-        //     _id: new mongoose.Types.ObjectId(ID),
-        //   },
-        // },
-        // {
-        //   $group: {
-        //     _id: "$_id",
-        //     title: { $first: "$title" },
-        //     description: { $first: "$description" },
-        //     category: { $first: "$category" },
-        //     city: { $first: "$city" },
-        //     date: { $first: "$date" },
-        //     budget: { $first: "$budget" },
+        {
+          $match: {
+            _id: new mongoose.Types.ObjectId(ID),
+          },
+        },
+        {
+          $group: {
+            _id: "$_id",
+            title: { $first: "$title" },
+            description: { $first: "$description" },
+            category: { $first: "$category" },
+            city: { $first: "$city" },
+            date: { $first: "$date" },
+            budget: { $first: "$budget" },
+            image: { $first: "$image" },
 
-        //     name: { $first: "$result.name" },
-        //     email: { $first: "$result.email" },
-        //     phonenumber: { $first: "$result.phonenumber" },
-        //     house: { $first: "$result.house" },
-        //     street: { $first: "$result.street" },
-        //     town: { $first: "$result.town" },
-        //     state: { $first: "$result.state" },
-        //     district: { $first: "$result.district" },
-        //     pincode: { $first: "$result.pincode" },
-        //     city: { $first: "$result.city" },
-        //   },
-        // },
+            name: { $first: "$result.name" },
+            email: { $first: "$result.email" },
+            phonenumber: { $first: "$result.phonenumber" },
+            house: { $first: "$result.house" },
+            street: { $first: "$result.street" },
+            town: { $first: "$result.town" },
+            state: { $first: "$result.state" },
+            district: { $first: "$result.district" },
+            pincode: { $first: "$result.pincode" },
+            city: { $first: "$result.city" },
+          },
+        },
       ])
       .then((response) => {
         return res.status(200).json({
@@ -499,7 +501,13 @@ buissnessRouter.get("/viewapplication/:id", async (req, res) => {
           message: "job details",
         });
       });
-  } catch (error) {}
+  } catch (error) {
+    console.error("Error in viewapplication:", error);
+    return res.status(500).json({ 
+      message: "internal server error",
+      error: error.message
+    });
+  }
 });
 
 // view appointments
@@ -537,6 +545,7 @@ buissnessRouter.get("/viewjobappointments", checkAuth, async (req, res) => {
             userId: { $first: "$result.userId" },
             description: { $first: "$result.description" },
             budget: { $first: "$result.budget" },
+            image: { $first: "$result.image" },
           },
         },
       ])
@@ -606,6 +615,7 @@ buissnessRouter.get("/viewjobappointments/:id", async (req, res) => {
             description: { $first: "$result.description" },
             budget: { $first: "$result.budget" },
             category: { $first: "$result.category" },
+            image: { $first: "$result.image" },
           },
         },
       ])
